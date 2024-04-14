@@ -21,7 +21,10 @@
     <ClCompile Include="PerlerMaker\PerlerMaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\Utils.cpp">
+    <ClCompile Include="PerlerMaker\Options.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PerlerMaker\PalettesManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -30,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\Data\XMLFiles\actionKeys.xml" />
+    <Xml Include="..\Data\XMLFiles\Palettes\perler_beads.xml" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Data\res.rc">
@@ -40,7 +44,10 @@
     <ClInclude Include="PerlerMaker\PerlerMaker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\Utils.h">
+    <ClInclude Include="PerlerMaker\Options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlerMaker\PalettesManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

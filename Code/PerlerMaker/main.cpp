@@ -32,8 +32,6 @@ int main()
 	
 	g_pFZN_WindowMgr->SetIcon( DATAPATH( "Misc/fzn.png" ) );
 
-	FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_CYAN, "Hello World!" );
-
 	auto perler_maker = PerlerMaker::CPerlerMaker{};
 
 	//Game loop (add callbacks to your functions so they can be called in there)
