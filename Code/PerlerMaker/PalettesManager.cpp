@@ -9,6 +9,8 @@
 
 namespace PerlerMaker
 {
+	static const std::string preset_all{ "All" };
+
 	std::string PalettesManager::ColorInfos::get_full_name()
 	{
 		auto color_name = std::string{};
@@ -63,6 +65,7 @@ namespace PerlerMaker
 		}
 
 		m_selected_palette = &m_palettes.begin()->second;
+		m_selected_preset = preset_all;
 	}
 
 	void PalettesManager::_load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name )
@@ -100,19 +103,50 @@ namespace PerlerMaker
 			FZN_DBLOG( "\t\tAdding color '%s' to palette.", color_infos.get_full_name().c_str() );
 
 			color_palette.m_colors.push_back( color_infos );
+			const auto color_id{ color_palette.m_colors.size() - 1 };
+
+			color_palette.m_presets[ preset_all ].push_back( color_id );
 
 			auto presets = fzn::Tools::split( fzn::Tools::XMLStringAttribute( color_settings, "presets" ), ',' );
 
 			if( presets.empty() == false )
 			{
 				for( auto& preset : presets )
-					color_palette.m_presets[ preset ] = color_palette.m_colors.size() - 1;
+					color_palette.m_presets[ preset ].push_back( color_id );
 			}
 
 			color_settings = color_settings->NextSiblingElement( "color" );
 		}
 
 		m_palettes[ color_palette.m_name ] = std::move( color_palette );
+	}
+
+	void PalettesManager::_set_all_colors_selection( bool _selected )
+	{
+		if( m_selected_palette == nullptr )
+			return;
+
+		for( auto& color : m_selected_palette->m_colors )
+			color.m_selected = _selected;
+	}
+
+	void PalettesManager::_select_colors_from_preset( std::string_view _preset )
+	{
+		if( _preset.empty() || m_selected_palette == nullptr )
+			return;
+
+		if( auto preset = m_selected_palette->m_presets.find( _preset.data() ); preset != m_selected_palette->m_presets.end() )
+		{
+			_set_all_colors_selection( false );
+
+			for( auto& color_id : preset->second )
+			{
+				if( color_id >= m_selected_palette->m_colors.size() )
+					continue;
+
+				m_selected_palette->m_colors[ color_id ].m_selected = true;
+			}
+		}
 	}
 
 	void PalettesManager::_header()
@@ -128,8 +162,21 @@ namespace PerlerMaker
 
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth( -1.f );
-			if( ImGui::BeginCombo( "##Palette", "Hama beads" ) )
+			
+			if( ImGui::BeginCombo( "##Palette", m_selected_palette != nullptr ? m_selected_palette->m_name.c_str() : "> select <" ) )
+			{
+				for( auto& palette : m_palettes )
+				{
+					if( ImGui::Selectable( palette.first.c_str(), m_selected_palette != nullptr ? m_selected_palette->m_name == palette.first : false ) )
+					{
+						m_selected_palette = &palette.second;
+						m_selected_preset = preset_all;
+						_select_colors_from_preset( m_selected_preset );
+					}
+				}
+
 				ImGui::EndCombo();
+			}
 
 			ImGui::TableNextColumn();
 			ImGui::AlignTextToFramePadding();
@@ -137,8 +184,33 @@ namespace PerlerMaker
 
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth( -1.f );
-			if( ImGui::BeginCombo( "##Preset", "All" ) )
+
+			auto preset_combo_preview = std::string{ "> select <" };
+
+			if( m_selected_palette == nullptr )
+			{
+				ImGui::PushItemFlag( ImGuiItemFlags_Disabled, true );
+				preset_combo_preview = "select a palette first";
+			}
+			else if( m_selected_preset.empty() == false )
+				preset_combo_preview = m_selected_preset;
+
+			if( ImGui::BeginCombo( "##Preset", preset_combo_preview.c_str() ) )
+			{
+				for( auto& preset : m_selected_palette->m_presets )
+				{
+					if( ImGui::Selectable( preset.first.c_str(), preset.first == m_selected_preset ) )
+					{
+						m_selected_preset = preset.first;
+						_select_colors_from_preset( m_selected_preset );
+					}
+				}
+
 				ImGui::EndCombo();
+			}
+
+			if( m_selected_palette == nullptr )
+				ImGui::PopItemFlag();
 
 			ImGui::EndTable();
 		}
@@ -147,10 +219,12 @@ namespace PerlerMaker
 		{
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth( ImGui::GetContentRegionAvailWidth() );
-			ImGui::Button( "Select All", { ImGui::GetContentRegionAvailWidth(), 0.f } );
+			if( ImGui::Button( "Select All", { ImGui::GetContentRegionAvailWidth(), 0.f } ) )
+				_set_all_colors_selection( true );
 
 			ImGui::TableNextColumn();
-			ImGui::Button( "Select None", { ImGui::GetContentRegionAvailWidth(), 0.f } );
+			if( ImGui::Button( "Select None", { ImGui::GetContentRegionAvailWidth(), 0.f } ) )
+				_set_all_colors_selection( false );
 
 			ImGui::EndTable();
 		}
@@ -179,6 +253,42 @@ namespace PerlerMaker
 		}
 		
 		ImGui::EndChild();
+	}
+
+	void bicolor_color_name( std::string_view _color, bool _bold )
+	{
+		auto first_number_pos{ _color.find_first_not_of( '0' ) };
+
+		if( first_number_pos == std::string::npos )
+		{
+			if( _bold )
+				ImGui_fzn::bold_text( _color );
+			else
+				ImGui::Text( _color.data() );
+
+			return;
+		}
+
+		auto leading_zeros = std::string{ _color.substr( 0, first_number_pos ) };
+		auto number = std::string{ _color.substr( first_number_pos ) };
+
+		auto spacing_backup{ ImGui::GetStyle().ItemSpacing.x };
+		ImGui::GetStyle().ItemSpacing.x = 0.f;
+
+		if( _bold )
+		{
+			ImGui_fzn::bold_text_colored( ImGui_fzn::color::gray, leading_zeros );
+			ImGui::SameLine();
+			ImGui_fzn::bold_text( number );
+		}
+		else
+		{
+			ImGui::TextColored( ImGui_fzn::color::gray, leading_zeros.c_str() );
+			ImGui::SameLine();
+			ImGui::Text( number.c_str() );
+		}
+
+		ImGui::GetStyle().ItemSpacing.x = spacing_backup;
 	}
 
 	void PalettesManager::_selectable_color_info( ColorInfos& _color )
@@ -229,9 +339,9 @@ namespace PerlerMaker
 			ImGui::SameLine();
 			ImGui::SetItemAllowOverlap();
 			ImGui::SetCursorPos( test_cursor_pos );
-			ImGui_fzn::bold_text( color_name );
+			bicolor_color_name( color_name, true );
 		}
 		else
-			ImGui::Text( color_name.c_str() );
+			bicolor_color_name( color_name.c_str(), false );
 	}
 } // namespace PerlerMaker
