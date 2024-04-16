@@ -3,6 +3,7 @@
 #include <FZN/Managers/DataManager.h>
 #include <FZN/Managers/WindowManager.h>
 #include <FZN/UI/ImGui.h>
+#include <FZN/Tools/Logging.h>
 
 #include "CanvasManager.h"
 #include "PerlerMaker.h"
@@ -65,17 +66,30 @@ namespace PerlerMaker
 		m_pixels.clear();
 
 		const auto image{ _texture->copyToImage() };
-		const auto pixels{ image.getPixelsPtr() };
+		auto color_values{ image.getPixelsPtr() };
 		const auto image_size{ image.getSize() };
 		const auto max_pixel_index{ image_size.x * image_size.y * ColorChannel::COUNT };
 
-		for( auto pixel_index{ 0 }; pixel_index < max_pixel_index; pixel_index += ColorChannel::COUNT )
+		//const auto offsets = std::array
+
+		auto process_pixel = [ this, &image_size ]( const uint8_t* _values, int _value_index )
+		{
+			const auto pixel_index{ _value_index / ColorChannel::COUNT };
+			const auto pixel_position = sf::Vector2f{ pixel_index / image_size.x, pixel_index % image_size.x };
+
+
+		};
+
+		for( auto value_index{ 0 }; value_index < max_pixel_index; value_index += ColorChannel::COUNT, color_values += ColorChannel::COUNT )
 		{
 			auto pixel_position = sf::Vector2f{};
-			pixel_position.x = pixel_index / image_size.x;
-			pixel_position.y = (float)( pixel_index % image_size.y );
+			auto test{ value_index / ColorChannel::COUNT };
+			pixel_position.y = test / image_size.x;
+			pixel_position.x = (float)(test % image_size.x);
 
-			m_pixels.append( { pixel_position, { pixels[ ColorChannel::red ], pixels[ ColorChannel::green ], pixels[ ColorChannel::blue ], pixels[ ColorChannel::alpha ] } } );
+			auto vertex = sf::Vertex{ pixel_position, { color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] } };
+
+			m_pixels.append( std::move( vertex ) );
 		}
 	}
 

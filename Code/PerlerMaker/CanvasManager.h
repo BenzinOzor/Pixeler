@@ -30,5 +30,6 @@ namespace PerlerMaker
 		sf::Sprite			m_default_image_sprite;
 		sf::Sprite			m_sprite;
 		sf::VertexArray		m_pixels;
+		uint32_t			m_pixel_size{ 1 };
 	};
 } // namespace PerlerMaker
