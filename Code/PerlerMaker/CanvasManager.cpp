@@ -26,6 +26,8 @@ namespace PerlerMaker
 
 		m_render_texture.create( window_size.x, window_size.y );
 		m_sprite.setTexture( m_render_texture.getTexture() );
+
+		m_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
 	}
 
 	void CanvasManager::update()
@@ -33,14 +35,18 @@ namespace PerlerMaker
 		auto& options{ g_perler_maker->get_options() };
 		auto& canvas_bg_color{ options.get_canvas_background_color() };
 		ImGui::PushStyleColor( ImGuiCol_ChildBg, canvas_bg_color );
+		ImGui::PushStyleColor( ImGuiCol_WindowBg, canvas_bg_color );
+		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0, 0 } );
 
 		if( ImGui::Begin( "Canvas" ) )
 		{
 			_display_canvas( canvas_bg_color );
+			_display_bottom_bar();
 		}
 
 		ImGui::End();
-		ImGui::PopStyleColor();
+		ImGui::PopStyleColor( 2 );
+		ImGui::PopStyleVar();
 	}
 
 	void CanvasManager::load_texture( std::string_view _path )
@@ -70,26 +76,24 @@ namespace PerlerMaker
 		const auto image_size{ image.getSize() };
 		const auto max_pixel_index{ image_size.x * image_size.y * ColorChannel::COUNT };
 
-		//const auto offsets = std::array
-
-		auto process_pixel = [ this, &image_size ]( const uint8_t* _values, int _value_index )
+		for( auto value_index{ 0u }; value_index < max_pixel_index; value_index += ColorChannel::COUNT, color_values += ColorChannel::COUNT )
 		{
-			const auto pixel_index{ _value_index / ColorChannel::COUNT };
-			const auto pixel_position = sf::Vector2f{ pixel_index / image_size.x, pixel_index % image_size.x };
-
-
-		};
-
-		for( auto value_index{ 0 }; value_index < max_pixel_index; value_index += ColorChannel::COUNT, color_values += ColorChannel::COUNT )
-		{
+			const auto pixel_index{ value_index / ColorChannel::COUNT };
 			auto pixel_position = sf::Vector2f{};
-			auto test{ value_index / ColorChannel::COUNT };
-			pixel_position.y = test / image_size.x;
-			pixel_position.x = (float)(test % image_size.x);
+			pixel_position.x = (pixel_index % image_size.x) * m_pixel_size;
+			pixel_position.y = (pixel_index / image_size.x) * m_pixel_size;
+			const auto pixel_color = sf::Color{ color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] };
 
-			auto vertex = sf::Vertex{ pixel_position, { color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] } };
+			auto offsets = std::array< sf::Vector2f, 4 >{};
+			offsets[ 0 ] = { 0.f,			0.f };
+			offsets[ 1 ] = { m_pixel_size,	0.f };
+			offsets[ 2 ] = { m_pixel_size,	m_pixel_size };
+			offsets[ 3 ] = { 0.f,			m_pixel_size };
 
-			m_pixels.append( std::move( vertex ) );
+			m_pixels.append( { { pixel_position + offsets[ 0 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + offsets[ 1 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + offsets[ 2 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + offsets[ 3 ] }, pixel_color } );
 		}
 	}
 
@@ -103,4 +107,20 @@ namespace PerlerMaker
 
 		ImGui::Image( m_sprite );
 	}
+
+	void CanvasManager::_display_bottom_bar()
+	{
+		auto* draw_list{ ImGui::GetWindowDrawList() };
+		const auto region_max{ ImGui::GetWindowSize() };
+		const auto frame_height_spacing{ ImGui::GetFrameHeightWithSpacing() };
+		const auto bottom_bar_pos = ImGui::GetWindowPos() + ImVec2{ 0.f, region_max.y - frame_height_spacing };
+
+		ImGui::GetWindowPos();
+
+		ImGui::DrawRectFilled( { 0, 0, 10, 10 }, {255, 0, 0, 150 } );
+
+		if( draw_list != nullptr )
+			draw_list->AddRectFilled( bottom_bar_pos, bottom_bar_pos + region_max, ImColor{ 0, 255, 0, 150 } );
+	}
+
 } // namespace PerlerMaker
