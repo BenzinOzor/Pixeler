@@ -4,6 +4,7 @@
 
 #include "Options.h"
 #include "PalettesManager.h"
+#include "CanvasManager.h"
 
 
 namespace PerlerMaker
@@ -16,17 +17,17 @@ namespace PerlerMaker
 
 		void display();
 
+		const Options& get_options() const { return m_options; }
+
 	private:
 		void _load_image();
 
 		void _display_menu_bar();
-		void _display_canvas();
-
-		sf::RenderTexture	m_render_texture;
-		sf::Sprite			m_default_image_sprite;
-		sf::Sprite			m_sprite;
 		
 		Options				m_options;
 		PalettesManager		m_palettes_manager;
+		CanvasManager		m_canvas_manager;
 	};
 };
+
+extern PerlerMaker::CPerlerMaker* g_perler_maker;

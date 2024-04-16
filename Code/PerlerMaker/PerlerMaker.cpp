@@ -5,9 +5,10 @@
 #include "PerlerMaker/PerlerMaker.h"
 
 
+PerlerMaker::CPerlerMaker* g_perler_maker = nullptr;
+
 namespace PerlerMaker
 {
-
 	CPerlerMaker::CPerlerMaker()
 	{
 		g_pFZN_Core->AddCallback( this, &CPerlerMaker::display, fzn::DataCallbackType::Display );
@@ -21,10 +22,7 @@ namespace PerlerMaker
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontRegular = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/Fonts/Rubik Light Regular.ttf" ), 16.f );
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/Fonts/Rubik Light Bold.ttf" ), 16.f );
 
-		sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
-
-		m_render_texture.create( window_size.x, window_size.y );
-		m_sprite.setTexture( m_render_texture.getTexture() );
+		g_perler_maker = this;
 	}
 
 	CPerlerMaker::~CPerlerMaker()
@@ -44,7 +42,6 @@ namespace PerlerMaker
 		ImGui::PushStyleVar( ImGuiStyleVar_::ImGuiStyleVar_WindowPadding, ImVec2( 0.0f, 0.0f ) );
 		ImGui::PushStyleColor( ImGuiCol_WindowBg, ImVec4( 0.10f, 0.16f, 0.22f, 1.f ) );
 		ImGui::PushStyleColor( ImGuiCol_CheckMark, ImVec4( 0.f, 1.f, 0.f, 1.f ) );
-		//ImGui::GetStyle().Colors[ ImGuiCol_CheckMark ] = ImVec4( 0.f, 1.f, 0.f, 1.f );
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
 		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
@@ -60,7 +57,7 @@ namespace PerlerMaker
 		ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 		ImGui::DockSpace( dockspace_id, ImVec2( 0.0f, 0.0f ), dockspace_flags );
 
-		_display_canvas();
+		m_canvas_manager.update();
 		m_palettes_manager.update();
 		m_options.update();
 
@@ -86,14 +83,7 @@ namespace PerlerMaker
 		GetOpenFileName( &open_file_name );
 
 		if( open_file_name.lpstrFile[ 0 ] != '\0' )
-		{
-			g_pFZN_DataMgr->UnloadTexture( "Perler Default Image" );
-
-			auto texture = g_pFZN_DataMgr->LoadTexture( "Perler Default Image", open_file_name.lpstrFile );
-
-			if( texture != nullptr )
-				m_default_image_sprite.setTexture( *texture );
-		}
+			m_canvas_manager.load_texture( open_file_name.lpstrFile );
 	}
 
 	void CPerlerMaker::_display_menu_bar()
@@ -121,25 +111,5 @@ namespace PerlerMaker
 
 			ImGui::EndMainMenuBar();
 		}
-	}
-
-	void CPerlerMaker::_display_canvas()
-	{
-		auto& canvas_bg_color{ m_options.get_canvas_background_color() };
-		ImGui::PushStyleColor( ImGuiCol_ChildBg, canvas_bg_color );
-
-		if( ImGui::Begin( "Canvas" ) )
-		{
-			auto sprite_size{ ImGui::GetContentRegionAvail() };
-			m_sprite.setTextureRect( { 0, 0, (int)sprite_size.x, (int)sprite_size.y } );
-			m_render_texture.clear( canvas_bg_color );
-			m_render_texture.draw( m_default_image_sprite );
-			m_render_texture.display();
-
-			ImGui::Image( m_sprite );
-		}
-
-		ImGui::End();
-		ImGui::PopStyleColor();
 	}
 };

@@ -247,6 +247,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="PerlerMaker\CanvasManager.cpp" />
     <ClCompile Include="PerlerMaker\main.cpp" />
     <ClCompile Include="PerlerMaker\Options.cpp" />
     <ClCompile Include="PerlerMaker\PalettesManager.cpp" />
@@ -267,6 +268,7 @@
     <ResourceCompile Include="..\Data\res.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="PerlerMaker\CanvasManager.h" />
     <ClInclude Include="PerlerMaker\Options.h" />
     <ClInclude Include="PerlerMaker\PalettesManager.h" />
     <ClInclude Include="PerlerMaker\PerlerMaker.h" />
