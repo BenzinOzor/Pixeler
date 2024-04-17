@@ -41,12 +41,16 @@ namespace PerlerMaker
 		if( ImGui::Begin( "Canvas" ) )
 		{
 			_display_canvas( canvas_bg_color );
+			ImGui::PopStyleVar();
+
 			_display_bottom_bar();
 		}
+		else
+			ImGui::PopStyleVar();
 
 		ImGui::End();
 		ImGui::PopStyleColor( 2 );
-		ImGui::PopStyleVar();
+		
 	}
 
 	void CanvasManager::load_texture( std::string_view _path )
@@ -120,7 +124,13 @@ namespace PerlerMaker
 		ImGui::DrawRectFilled( { 0, 0, 10, 10 }, {255, 0, 0, 150 } );
 
 		if( draw_list != nullptr )
-			draw_list->AddRectFilled( bottom_bar_pos, bottom_bar_pos + region_max, ImColor{ 0, 255, 0, 150 } );
+			draw_list->AddRectFilled( bottom_bar_pos, bottom_bar_pos + region_max, ImGui_fzn::get_color( ImGuiCol_MenuBarBg ) );
+
+		auto cursor_pos_x{ ImGui::GetStyle().WindowPadding.x };
+		auto cursor_pos_y{ region_max.y - frame_height_spacing + ImGui::GetStyle().ItemSpacing.y };
+
+		ImGui::SetCursorPos( { cursor_pos_x, cursor_pos_y } );
+		ImGui::SliderFloat( "Pixel size", &m_pixel_size, 1.f, 100.f, "%.0f" ); // set size thinner
 	}
 
 } // namespace PerlerMaker
