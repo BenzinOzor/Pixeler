@@ -28,6 +28,11 @@ namespace PerlerMaker
 		m_sprite.setTexture( m_render_texture.getTexture() );
 
 		m_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
+
+		m_offsets[ 0 ] = { 0.f,				0.f };
+		m_offsets[ 1 ] = { m_pixel_size,	0.f };
+		m_offsets[ 2 ] = { m_pixel_size,	m_pixel_size };
+		m_offsets[ 3 ] = { 0.f,				m_pixel_size };
 	}
 
 	void CanvasManager::update()
@@ -66,6 +71,7 @@ namespace PerlerMaker
 			m_default_image_sprite.setTexture( *texture );
 
 		_load_pixels( texture );
+		_update_pixel_size( 2.f );
 	}
 
 	void CanvasManager::_load_pixels( sf::Texture* _texture )
@@ -88,17 +94,37 @@ namespace PerlerMaker
 			pixel_position.y = (pixel_index / image_size.x) * m_pixel_size;
 			const auto pixel_color = sf::Color{ color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] };
 
-			auto offsets = std::array< sf::Vector2f, 4 >{};
-			offsets[ 0 ] = { 0.f,			0.f };
-			offsets[ 1 ] = { m_pixel_size,	0.f };
-			offsets[ 2 ] = { m_pixel_size,	m_pixel_size };
-			offsets[ 3 ] = { 0.f,			m_pixel_size };
-
-			m_pixels.append( { { pixel_position + offsets[ 0 ] }, pixel_color } );
-			m_pixels.append( { { pixel_position + offsets[ 1 ] }, pixel_color } );
-			m_pixels.append( { { pixel_position + offsets[ 2 ] }, pixel_color } );
-			m_pixels.append( { { pixel_position + offsets[ 3 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + m_offsets[ 0 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + m_offsets[ 1 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + m_offsets[ 2 ] }, pixel_color } );
+			m_pixels.append( { { pixel_position + m_offsets[ 3 ] }, pixel_color } );
 		}
+	}
+
+	void CanvasManager::_update_pixel_size( float _new_pixel_size )
+	{
+		if( _new_pixel_size == m_pixel_size )
+			return;
+
+		auto quad_index{ 0 };
+		auto texture_size = sf::Vector2u{ 15, 10 };
+
+		auto set_new_pos = [ this, &quad_index, &texture_size, &_new_pixel_size ]( int _quad_corner_index )
+		{
+			auto base_pos = sf::Vector2f{ ( quad_index % texture_size.x ) * _new_pixel_size, ( quad_index / texture_size.x ) * _new_pixel_size };
+
+			m_pixels[ quad_index + _quad_corner_index ].position = base_pos + m_offsets[ _quad_corner_index ];
+		};
+
+		for( ; quad_index < m_pixels.getVertexCount(); quad_index += 4 )
+		{
+			set_new_pos( 0 );
+			set_new_pos( 1 );
+			set_new_pos( 2 );
+			set_new_pos( 3 );
+		}
+
+		m_pixel_size = _new_pixel_size;
 	}
 
 	void CanvasManager::_display_canvas( const sf::Color& _bg_color )
@@ -130,7 +156,11 @@ namespace PerlerMaker
 		auto cursor_pos_y{ region_max.y - frame_height_spacing + ImGui::GetStyle().ItemSpacing.y };
 
 		ImGui::SetCursorPos( { cursor_pos_x, cursor_pos_y } );
-		ImGui::SliderFloat( "Pixel size", &m_pixel_size, 1.f, 100.f, "%.0f" ); // set size thinner
+		ImGui::SetNextItemWidth( 150.f );
+
+		auto new_pixel_size{ m_pixel_size };
+		if( ImGui_fzn::small_slider_float( "Pixel size", &new_pixel_size, 1.f, 100.f, "%.0f" ) )
+			_update_pixel_size( new_pixel_size );
 	}
 
 } // namespace PerlerMaker
