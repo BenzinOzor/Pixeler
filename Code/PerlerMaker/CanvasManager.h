@@ -32,6 +32,7 @@ namespace PerlerMaker
 		sf::Sprite						m_default_image_sprite;
 		sf::Sprite						m_sprite;
 		sf::VertexArray					m_pixels;
+		sf::Vector2u					m_image_size{};
 		float							m_pixel_size{ 1.f };
 		std::array< sf::Vector2f, 4 >	m_offsets;
 	};

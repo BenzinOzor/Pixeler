@@ -7,24 +7,19 @@
 
 #include "CanvasManager.h"
 #include "PerlerMaker.h"
+#include "Defines.h"
 
 
 namespace PerlerMaker
 {
-	enum ColorChannel
-	{
-		red,
-		green,
-		blue,
-		alpha,
-		COUNT
-	};
-
 	CanvasManager::CanvasManager()
 	{
 		sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
+		
+		auto desktop_rect = RECT{};
+		GetWindowRect( GetDesktopWindow(), &desktop_rect );
 
-		m_render_texture.create( window_size.x, window_size.y );
+		m_render_texture.create( window_size.x*3, window_size.y*3 );
 		m_sprite.setTexture( m_render_texture.getTexture() );
 
 		m_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
@@ -71,7 +66,6 @@ namespace PerlerMaker
 			m_default_image_sprite.setTexture( *texture );
 
 		_load_pixels( texture );
-		_update_pixel_size( 2.f );
 	}
 
 	void CanvasManager::_load_pixels( sf::Texture* _texture )
@@ -83,15 +77,15 @@ namespace PerlerMaker
 
 		const auto image{ _texture->copyToImage() };
 		auto color_values{ image.getPixelsPtr() };
-		const auto image_size{ image.getSize() };
-		const auto max_pixel_index{ image_size.x * image_size.y * ColorChannel::COUNT };
+		m_image_size = image.getSize();
+		const auto max_pixel_index{ m_image_size.x * m_image_size.y * ColorChannel::COUNT };
 
 		for( auto value_index{ 0u }; value_index < max_pixel_index; value_index += ColorChannel::COUNT, color_values += ColorChannel::COUNT )
 		{
 			const auto pixel_index{ value_index / ColorChannel::COUNT };
 			auto pixel_position = sf::Vector2f{};
-			pixel_position.x = (pixel_index % image_size.x) * m_pixel_size;
-			pixel_position.y = (pixel_index / image_size.x) * m_pixel_size;
+			pixel_position.x = (pixel_index % m_image_size.x) * m_pixel_size;
+			pixel_position.y = (pixel_index / m_image_size.x) * m_pixel_size;
 			const auto pixel_color = sf::Color{ color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] };
 
 			m_pixels.append( { { pixel_position + m_offsets[ 0 ] }, pixel_color } );
@@ -107,13 +101,13 @@ namespace PerlerMaker
 			return;
 
 		auto quad_index{ 0 };
-		auto texture_size = sf::Vector2u{ 15, 10 };
 
-		auto set_new_pos = [ this, &quad_index, &texture_size, &_new_pixel_size ]( int _quad_corner_index )
+		auto set_new_pos = [ this, &quad_index, &_new_pixel_size ]( int _quad_corner_index )
 		{
-			auto base_pos = sf::Vector2f{ ( quad_index % texture_size.x ) * _new_pixel_size, ( quad_index / texture_size.x ) * _new_pixel_size };
+			auto base_index{ quad_index / 4 };
+			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * _new_pixel_size, ( base_index / m_image_size.x ) * _new_pixel_size };
 
-			m_pixels[ quad_index + _quad_corner_index ].position = base_pos + m_offsets[ _quad_corner_index ];
+			m_pixels[ quad_index + _quad_corner_index ].position = base_pos + m_offsets[ _quad_corner_index ] * _new_pixel_size;
 		};
 
 		for( ; quad_index < m_pixels.getVertexCount(); quad_index += 4 )
@@ -146,8 +140,6 @@ namespace PerlerMaker
 		const auto bottom_bar_pos = ImGui::GetWindowPos() + ImVec2{ 0.f, region_max.y - frame_height_spacing };
 
 		ImGui::GetWindowPos();
-
-		ImGui::DrawRectFilled( { 0, 0, 10, 10 }, {255, 0, 0, 150 } );
 
 		if( draw_list != nullptr )
 			draw_list->AddRectFilled( bottom_bar_pos, bottom_bar_pos + region_max, ImGui_fzn::get_color( ImGuiCol_MenuBarBg ) );

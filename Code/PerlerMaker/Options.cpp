@@ -1,4 +1,11 @@
+#include <fstream>
+
+#include <Externals/json/json.h>
+
+#include <FZN/Managers/FazonCore.h>
+
 #include "Options.h"
+#include "Defines.h"
 
 
 namespace PerlerMaker
@@ -31,7 +38,15 @@ namespace PerlerMaker
 
 	void Options::_load_options()
 	{
+		auto file = std::ifstream{ g_pFZN_Core->GetSaveFolderPath() + "/options.json" };
+		auto root = Json::Value{};
 
+		file >> root;
+
+		m_canvas_background_color.x = root[ "canvas_color" ][ ColorChannel::red ].asUInt() / 255.f;
+		m_canvas_background_color.y = root[ "canvas_color" ][ ColorChannel::green ].asUInt() / 255.f;
+		m_canvas_background_color.z = root[ "canvas_color" ][ ColorChannel::blue ].asUInt() / 255.f;
+		m_canvas_background_color.w = 1.f;
 	}
 
 	void Options::_save_options()
