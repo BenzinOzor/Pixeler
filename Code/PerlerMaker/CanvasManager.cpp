@@ -14,12 +14,11 @@ namespace PerlerMaker
 {
 	CanvasManager::CanvasManager()
 	{
+		g_pFZN_Core->AddCallback( this, &CanvasManager::on_event, fzn::DataCallbackType::Event );
+
 		sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
 		
-		auto desktop_rect = RECT{};
-		GetWindowRect( GetDesktopWindow(), &desktop_rect );
-
-		m_render_texture.create( window_size.x*3, window_size.y*3 );
+		m_render_texture.create( window_size.x, window_size.y );
 		m_sprite.setTexture( m_render_texture.getTexture() );
 
 		m_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
@@ -28,6 +27,22 @@ namespace PerlerMaker
 		m_offsets[ 1 ] = { m_pixel_size,	0.f };
 		m_offsets[ 2 ] = { m_pixel_size,	m_pixel_size };
 		m_offsets[ 3 ] = { 0.f,				m_pixel_size };
+	}
+
+	CanvasManager::~CanvasManager()
+	{
+		g_pFZN_Core->RemoveCallback( this, &CanvasManager::on_event, fzn::DataCallbackType::Event );
+	}
+
+	void CanvasManager::on_event()
+	{
+		auto window_event{ g_pFZN_WindowMgr->GetWindowEvent() };
+
+		if( window_event.type == sf::Event::Resized )
+		{
+			FZN_LOG( "new window size %d %d", window_event.size.width, window_event.size.height );
+			m_render_texture.create( window_event.size.width, window_event.size.height );
+		}
 	}
 
 	void CanvasManager::update()

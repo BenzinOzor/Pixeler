@@ -296,7 +296,6 @@ namespace PerlerMaker
 		auto color_name{ _color.get_full_name() };
 		auto cursor_pos{ ImGui::GetCursorPos() };
 		auto cursor_screen_pos{ ImGui::GetCursorScreenPos() };
-		auto* draw_list{ ImGui::GetWindowDrawList() };
 
 		auto shadow_min_pos = ImVec2{};
 		const auto shadow_size = ImVec2{ ImGui::GetFrameHeight(), ImGui::GetFrameHeight() };
@@ -308,11 +307,11 @@ namespace PerlerMaker
 
 		auto hovered{ ImGui::IsItemHovered() };
 
-		ImGui::SetCursorPos( cursor_pos );
+		ImGui::SetCursorPos( { ImGui::GetCursorPosX(), cursor_pos.y } );
 		if( hovered )
 		{
 			shadow_min_pos = ImGui::GetCursorScreenPos() + ImVec2{ 2, 2 };
-			draw_list->AddRectFilled( shadow_min_pos, shadow_min_pos + shadow_size, ImGui::ColorConvertFloat4ToU32( ImGui_fzn::color::black ) );
+			ImGui_fzn::rect_filled( { shadow_min_pos, shadow_size }, ImGui_fzn::color::black );
 		}
 		ImGui::PushStyleColor( ImGuiCol_FrameBg, ImColor{ 34, 59, 92 }.Value );
 		ImGui::Checkbox( fzn::Tools::Sprintf( "##checkbox_%s", color_name.c_str() ).c_str(), &_color.m_selected );
@@ -323,7 +322,7 @@ namespace PerlerMaker
 		if( hovered )
 		{
 			shadow_min_pos = ImGui::GetCursorScreenPos() + ImVec2{ 2, 2 };
-			draw_list->AddRectFilled( shadow_min_pos, shadow_min_pos + shadow_size, ImGui::ColorConvertFloat4ToU32( ImGui_fzn::color::black ) );
+			ImGui_fzn::rect_filled( { shadow_min_pos, shadow_size }, ImGui_fzn::color::black );
 		}
 		ImGui::ColorButton( fzn::Tools::Sprintf( "##color_button_%s", color_name.c_str() ).c_str(), _color.m_color, ImGuiColorEditFlags_NoTooltip );
 		ImGui::PopStyleColor();

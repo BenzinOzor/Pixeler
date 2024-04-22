@@ -15,6 +15,9 @@ namespace PerlerMaker
 	{
 	public:
 		CanvasManager();
+		~CanvasManager();
+		
+		void on_event();
 
 		void update();
 

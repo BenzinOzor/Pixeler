@@ -26,7 +26,7 @@ namespace PerlerMaker
 		if( m_show_window == false )
 			return;
 
-		//ImGui::SetNextWindowFocus();
+		ImGui::SetNextWindowFocus();
 
 		if( ImGui::Begin( "Options", &m_show_window, ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking ) )
 		{
@@ -51,7 +51,6 @@ namespace PerlerMaker
 
 	void Options::_save_options()
 	{
-
 	}
 
 } // namespace PerlerMaker
