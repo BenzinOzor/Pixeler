@@ -25,6 +25,8 @@ namespace PerlerMaker
 
 	private:
 		void _load_pixels( sf::Texture* _texture );
+		void _fit_image();
+		void _set_vertex_array_pos( const sf::Vector2f& _pos );
 		void _update_pixel_size( float _new_pixel_size );
 
 		//ImGui

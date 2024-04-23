@@ -81,6 +81,7 @@ namespace PerlerMaker
 			m_default_image_sprite.setTexture( *texture );
 
 		_load_pixels( texture );
+		_fit_image();
 	}
 
 	void CanvasManager::_load_pixels( sf::Texture* _texture )
@@ -107,6 +108,34 @@ namespace PerlerMaker
 			m_pixels.append( { { pixel_position + m_offsets[ 1 ] }, pixel_color } );
 			m_pixels.append( { { pixel_position + m_offsets[ 2 ] }, pixel_color } );
 			m_pixels.append( { { pixel_position + m_offsets[ 3 ] }, pixel_color } );
+		}
+	}
+
+	void CanvasManager::_fit_image()
+	{
+		const auto window_size{ ImGui::GetWindowContentRegionMax() };
+
+		const auto left_margin{ ( window_size.x - m_image_size.x ) * 0.5f };
+		const auto top_margin{ ( window_size.y - m_image_size.y ) * 0.5f };
+
+		// move image by margin size, pixel size = margin * 2
+		if( left_margin < top_margin )
+		{
+			_update_pixel_size( left_margin * 2.f );
+			//_set_vertex_array_pos( { 0.f, window_size.y * 0.5f - (m_image_size.y * m_pixel_size) * 0.5f } );
+		}
+		else
+		{
+			_update_pixel_size( top_margin * 2.f );
+			//_set_vertex_array_pos( { window_size.x * 0.5f - ( m_image_size.x * m_pixel_size ) * 0.5f, 0.f } );
+		}
+	}
+
+	void CanvasManager::_set_vertex_array_pos( const sf::Vector2f& _pos )
+	{
+		for( auto pixel_index{ 0 }; pixel_index < m_pixels.getVertexCount(); ++pixel_index )
+		{
+
 		}
 	}
 

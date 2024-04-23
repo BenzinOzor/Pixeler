@@ -95,8 +95,8 @@ namespace PerlerMaker
 				if( ImGui::MenuItem( "Charger Image" ) )
 					_load_image();
 
-				if( ImGui::MenuItem( "Saver Perler" ) ) {}
-				if( ImGui::MenuItem( "Saver Perler Sous..." ) ) {}
+				//if( ImGui::MenuItem( "Saver Perler" ) ) {}
+				//if( ImGui::MenuItem( "Saver Perler Sous..." ) ) {}
 
 				ImGui::EndMenu();
 			}
