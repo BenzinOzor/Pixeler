@@ -23,6 +23,7 @@ int main()
 	g_pFZN_Core->GreetingMessage();
 	g_pFZN_Core->SetConsolePosition( sf::Vector2i( 10, 10 ) );
 
+	g_pFZN_DataMgr->SetSmoothTextures( false );
 	//Loading of the resources that don't belong in a resource group and filling of the map containing the paths to the resources)
 	g_pFZN_DataMgr->LoadResourceFile( DATAPATH( "XMLFiles/Resources" ) );
 

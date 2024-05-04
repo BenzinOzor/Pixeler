@@ -218,12 +218,12 @@ namespace PerlerMaker
 		if( ImGui::BeginTable( "selections", 2 ) )
 		{
 			ImGui::TableNextColumn();
-			ImGui::SetNextItemWidth( ImGui::GetContentRegionAvailWidth() );
-			if( ImGui::Button( "Select All", { ImGui::GetContentRegionAvailWidth(), 0.f } ) )
+			ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+			if( ImGui::Button( "Select All", { ImGui::GetContentRegionAvail().x, 0.f } ) )
 				_set_all_colors_selection( true );
 
 			ImGui::TableNextColumn();
-			if( ImGui::Button( "Select None", { ImGui::GetContentRegionAvailWidth(), 0.f } ) )
+			if( ImGui::Button( "Select None", { ImGui::GetContentRegionAvail().x, 0.f } ) )
 				_set_all_colors_selection( false );
 
 			ImGui::EndTable();
@@ -240,7 +240,7 @@ namespace PerlerMaker
 				auto error_message = std::string{ "/!\\ No palette selected /!\\" };
 
 				ImGui::NewLine();
-				ImGui::SameLine( ImGui::GetContentRegionAvailWidth() * 0.5f - ImGui::CalcTextSize( error_message.c_str() ).x * 0.5f );
+				ImGui::SameLine( ImGui::GetContentRegionAvail().x * 0.5f - ImGui::CalcTextSize( error_message.c_str() ).x * 0.5f );
 				ImGui_fzn::bold_text_colored( ImGui_fzn::color::red, error_message );
 				ImGui::EndChild();
 				return;

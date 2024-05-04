@@ -24,9 +24,9 @@ namespace PerlerMaker
 		m_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
 
 		m_offsets[ 0 ] = { 0.f,				0.f };
-		m_offsets[ 1 ] = { m_pixel_size,	0.f };
-		m_offsets[ 2 ] = { m_pixel_size,	m_pixel_size };
-		m_offsets[ 3 ] = { 0.f,				m_pixel_size };
+		m_offsets[ 1 ] = { m_zoom_level,	0.f };
+		m_offsets[ 2 ] = { m_zoom_level,	m_zoom_level };
+		m_offsets[ 3 ] = { 0.f,				m_zoom_level };
 	}
 
 	CanvasManager::~CanvasManager()
@@ -55,6 +55,8 @@ namespace PerlerMaker
 
 		if( ImGui::Begin( "Canvas" ) )
 		{
+			m_canvas_size = ImGui::GetContentRegionAvail();
+			m_canvas_size.y -= ImGui::GetFrameHeightWithSpacing(); // bottom bar
 			_display_canvas( canvas_bg_color );
 			ImGui::PopStyleVar();
 
@@ -90,65 +92,99 @@ namespace PerlerMaker
 			return;
 
 		m_pixels.clear();
+		m_pixels_descs.clear();
 
 		const auto image{ _texture->copyToImage() };
 		auto color_values{ image.getPixelsPtr() };
 		m_image_size = image.getSize();
+
+		auto image_pos_min = sf::Vector2f{ FLT_MAX, FLT_MAX };
+		auto image_pos_max = sf::Vector2f{ -1.f, -1.f };
 		const auto max_pixel_index{ m_image_size.x * m_image_size.y * ColorChannel::COUNT };
 
-		for( auto value_index{ 0u }; value_index < max_pixel_index; value_index += ColorChannel::COUNT, color_values += ColorChannel::COUNT )
+		for( uint32_t value_index{ 0u }; value_index < max_pixel_index; value_index += ColorChannel::COUNT, color_values += ColorChannel::COUNT )
 		{
-			const auto pixel_index{ value_index / ColorChannel::COUNT };
-			auto pixel_position = sf::Vector2f{};
-			pixel_position.x = (pixel_index % m_image_size.x) * m_pixel_size;
-			pixel_position.y = (pixel_index / m_image_size.x) * m_pixel_size;
-			const auto pixel_color = sf::Color{ color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] };
+			const sf::Color pixel_color{ color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] };
+
+			if( pixel_color.a < 50 )
+				continue;
+
+			const uint32_t		pixel_index{ value_index / ColorChannel::COUNT };
+			const sf::Vector2f	pixel_position{ static_cast< float >( pixel_index % m_image_size.x ), static_cast<float>( pixel_index / m_image_size.x ) };
+
+			if( pixel_position.x < image_pos_min.x )
+				image_pos_min.x = pixel_position.x;
+
+			if( pixel_position.y < image_pos_min.y )
+				image_pos_min.y = pixel_position.y;
+
+			if( pixel_position.x >= image_pos_max.x )
+				image_pos_max.x = pixel_position.x + 1.f;
+
+			if( pixel_position.y >= image_pos_max.y )
+				image_pos_max.y = pixel_position.y + 1.f;
 
 			m_pixels.append( { { pixel_position + m_offsets[ 0 ] }, pixel_color } );
 			m_pixels.append( { { pixel_position + m_offsets[ 1 ] }, pixel_color } );
 			m_pixels.append( { { pixel_position + m_offsets[ 2 ] }, pixel_color } );
 			m_pixels.append( { { pixel_position + m_offsets[ 3 ] }, pixel_color } );
+
+			m_pixels_descs.push_back( { pixel_index, pixel_color } );
 		}
+
+		m_image_float_rect.left		= image_pos_min.x;
+		m_image_float_rect.top		= image_pos_min.y;
+		m_image_float_rect.width	= image_pos_max.x - image_pos_min.x;
+		m_image_float_rect.height	= image_pos_max.y - image_pos_min.y;
 	}
 
 	void CanvasManager::_fit_image()
 	{
-		const auto window_size{ ImGui::GetWindowContentRegionMax() };
+		const float horizontal_ratio{ m_canvas_size.x / m_image_float_rect.width };
+		const float vertical_ratio{ m_canvas_size.y / m_image_float_rect.height };
 
-		const auto left_margin{ ( window_size.x - m_image_size.x ) * 0.5f };
-		const auto top_margin{ ( window_size.y - m_image_size.y ) * 0.5f };
+		const float new_rect_width{ horizontal_ratio > vertical_ratio ? m_image_float_rect.width * vertical_ratio : m_canvas_size.x };
+		const float new_rect_height{ horizontal_ratio > vertical_ratio ? m_canvas_size.y : m_image_float_rect.height * horizontal_ratio };
 
-		// move image by margin size, pixel size = margin * 2
-		if( left_margin < top_margin )
-		{
-			_update_pixel_size( left_margin * 2.f );
-			//_set_vertex_array_pos( { 0.f, window_size.y * 0.5f - (m_image_size.y * m_pixel_size) * 0.5f } );
-		}
-		else
-		{
-			_update_pixel_size( top_margin * 2.f );
-			//_set_vertex_array_pos( { window_size.x * 0.5f - ( m_image_size.x * m_pixel_size ) * 0.5f, 0.f } );
-		}
+		_update_pixel_size( new_rect_width / m_image_float_rect.width );
+
+		const float left{ ( m_canvas_size.x - new_rect_width ) * 0.5f };
+		const float top{ ( m_canvas_size.y - new_rect_height ) * 0.5f };
+
+		_set_vertex_array_pos( sf::Vector2f{ left, top } - sf::Vector2f{ m_image_float_rect.left, m_image_float_rect.top } * m_zoom_level );
 	}
 
 	void CanvasManager::_set_vertex_array_pos( const sf::Vector2f& _pos )
 	{
-		for( auto pixel_index{ 0 }; pixel_index < m_pixels.getVertexCount(); ++pixel_index )
-		{
+		auto quad_index{ 0 };
 
+		auto set_new_pos = [this, &quad_index, &_pos]( int _quad_corner_index )
+		{
+			auto base_index{ get_pixel_index( quad_index / 4 ) };
+			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * m_zoom_level, ( base_index / m_image_size.x ) * m_zoom_level };
+
+			m_pixels[ quad_index + _quad_corner_index ].position = _pos + base_pos + m_offsets[ _quad_corner_index ] * m_zoom_level;
+		};
+
+		for( ; quad_index < m_pixels.getVertexCount(); quad_index += 4 )
+		{
+			set_new_pos( 0 );
+			set_new_pos( 1 );
+			set_new_pos( 2 );
+			set_new_pos( 3 );
 		}
 	}
 
 	void CanvasManager::_update_pixel_size( float _new_pixel_size )
 	{
-		if( _new_pixel_size == m_pixel_size )
+		if( _new_pixel_size == m_zoom_level )
 			return;
 
 		auto quad_index{ 0 };
 
 		auto set_new_pos = [ this, &quad_index, &_new_pixel_size ]( int _quad_corner_index )
 		{
-			auto base_index{ quad_index / 4 };
+			auto base_index{ get_pixel_index(  quad_index / 4 ) };
 			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * _new_pixel_size, ( base_index / m_image_size.x ) * _new_pixel_size };
 
 			m_pixels[ quad_index + _quad_corner_index ].position = base_pos + m_offsets[ _quad_corner_index ] * _new_pixel_size;
@@ -162,13 +198,22 @@ namespace PerlerMaker
 			set_new_pos( 3 );
 		}
 
-		m_pixel_size = _new_pixel_size;
+		m_zoom_level = _new_pixel_size;
+	}
+
+	uint32_t CanvasManager::get_pixel_index( uint32_t _quad_index )
+	{
+		if( _quad_index >= m_pixels_descs.size() )
+			return 0u;
+
+		return m_pixels_descs[ _quad_index ].m_pixel_index;
 	}
 
 	void CanvasManager::_display_canvas( const sf::Color& _bg_color )
 	{
-		auto sprite_size{ ImGui::GetContentRegionAvail() };
-		m_sprite.setTextureRect( { 0, 0, (int)sprite_size.x, (int)sprite_size.y } );
+		auto sprite_size{ m_canvas_size };
+		m_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
+		m_sprite.setPosition( ImGui::GetWindowPos() + sf::Vector2f{ 0.f, 1000.f } );
 		m_render_texture.clear( _bg_color );
 		m_render_texture.draw( m_pixels );
 		m_render_texture.display();
@@ -194,9 +239,14 @@ namespace PerlerMaker
 		ImGui::SetCursorPos( { cursor_pos_x, cursor_pos_y } );
 		ImGui::SetNextItemWidth( 150.f );
 
-		auto new_pixel_size{ m_pixel_size };
-		if( ImGui_fzn::small_slider_float( "Pixel size", &new_pixel_size, 1.f, 100.f, "%.0f" ) )
+		auto new_pixel_size{ m_zoom_level };
+		if( ImGui_fzn::small_slider_float( "Zoom level", &new_pixel_size, 1.f, 100.f, "x%.0f" ) )
 			_update_pixel_size( new_pixel_size );
+
+		ImGui::SameLine();
+
+		if( ImGui::SmallButton( "fit" ) )
+			_fit_image();
 	}
 
 } // namespace PerlerMaker
