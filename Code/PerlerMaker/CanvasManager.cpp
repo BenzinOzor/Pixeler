@@ -21,7 +21,8 @@ namespace PerlerMaker
 		m_render_texture.create( window_size.x, window_size.y );
 		m_sprite.setTexture( m_render_texture.getTexture() );
 
-		m_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
+		m_base_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
+		m_converted_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
 
 		m_offsets[ 0 ] = { 0.f,				0.f };
 		m_offsets[ 1 ] = { m_zoom_level,	0.f };
@@ -75,7 +76,8 @@ namespace PerlerMaker
 		if( _path.empty() )
 			return;
 
-		g_pFZN_DataMgr->UnloadTexture( "Perler Default Image" );
+		if( g_pFZN_DataMgr->GetTexture( "Perler Default Image", false ) != nullptr )
+			g_pFZN_DataMgr->UnloadTexture( "Perler Default Image" );
 
 		auto texture = g_pFZN_DataMgr->LoadTexture( "Perler Default Image", _path.data() );
 
@@ -86,12 +88,16 @@ namespace PerlerMaker
 		_fit_image();
 	}
 
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Load the base vertex array from the chosen image
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void CanvasManager::_load_pixels( sf::Texture* _texture )
 	{
 		if( _texture == nullptr )
 			return;
 
-		m_pixels.clear();
+		m_base_pixels.clear();
+		m_converted_pixels.clear();
 		m_pixels_descs.clear();
 
 		const auto image{ _texture->copyToImage() };
@@ -124,10 +130,15 @@ namespace PerlerMaker
 			if( pixel_position.y >= image_pos_max.y )
 				image_pos_max.y = pixel_position.y + 1.f;
 
-			m_pixels.append( { { pixel_position + m_offsets[ 0 ] }, pixel_color } );
-			m_pixels.append( { { pixel_position + m_offsets[ 1 ] }, pixel_color } );
-			m_pixels.append( { { pixel_position + m_offsets[ 2 ] }, pixel_color } );
-			m_pixels.append( { { pixel_position + m_offsets[ 3 ] }, pixel_color } );
+			m_base_pixels.append( { { pixel_position + m_offsets[ 0 ] }, pixel_color } );
+			m_base_pixels.append( { { pixel_position + m_offsets[ 1 ] }, pixel_color } );
+			m_base_pixels.append( { { pixel_position + m_offsets[ 2 ] }, pixel_color } );
+			m_base_pixels.append( { { pixel_position + m_offsets[ 3 ] }, pixel_color } );
+
+			m_converted_pixels.append( { { pixel_position + m_offsets[ 0 ] }, pixel_color } );
+			m_converted_pixels.append( { { pixel_position + m_offsets[ 1 ] }, pixel_color } );
+			m_converted_pixels.append( { { pixel_position + m_offsets[ 2 ] }, pixel_color } );
+			m_converted_pixels.append( { { pixel_position + m_offsets[ 3 ] }, pixel_color } );
 
 			m_pixels_descs.push_back( { pixel_index, pixel_color } );
 		}
@@ -136,8 +147,13 @@ namespace PerlerMaker
 		m_image_float_rect.top		= image_pos_min.y;
 		m_image_float_rect.width	= image_pos_max.x - image_pos_min.x;
 		m_image_float_rect.height	= image_pos_max.y - image_pos_min.y;
+
+		
 	}
 
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Default constructor, creation of the engine's singletons
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void CanvasManager::_fit_image()
 	{
 		const float horizontal_ratio{ m_canvas_size.x / m_image_float_rect.width };
@@ -146,7 +162,7 @@ namespace PerlerMaker
 		const float new_rect_width{ horizontal_ratio > vertical_ratio ? m_image_float_rect.width * vertical_ratio : m_canvas_size.x };
 		const float new_rect_height{ horizontal_ratio > vertical_ratio ? m_canvas_size.y : m_image_float_rect.height * horizontal_ratio };
 
-		_update_pixel_size( new_rect_width / m_image_float_rect.width );
+		_update_zoom_level( new_rect_width / m_image_float_rect.width );
 
 		const float left{ ( m_canvas_size.x - new_rect_width ) * 0.5f };
 		const float top{ ( m_canvas_size.y - new_rect_height ) * 0.5f };
@@ -154,51 +170,62 @@ namespace PerlerMaker
 		_set_vertex_array_pos( sf::Vector2f{ left, top } - sf::Vector2f{ m_image_float_rect.left, m_image_float_rect.top } * m_zoom_level );
 	}
 
-	void CanvasManager::_set_vertex_array_pos( const sf::Vector2f& _pos )
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Move a quad to the given position and update its zoom level
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	void CanvasManager::_set_quad_pos_and_zoom( sf::VertexArray& _pixels, int _quad_index, float _zoom_level, const sf::Vector2f& _pos /*= { 0.f, 0.f }*/ )
 	{
-		auto quad_index{ 0 };
-
-		auto set_new_pos = [this, &quad_index, &_pos]( int _quad_corner_index )
+		for( int quad_corner{ 0 }; quad_corner < 4; ++quad_corner )
 		{
-			auto base_index{ get_pixel_index( quad_index / 4 ) };
-			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * m_zoom_level, ( base_index / m_image_size.x ) * m_zoom_level };
+			auto base_index{ get_pixel_index( _quad_index / 4 ) };
+			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * _zoom_level, ( base_index / m_image_size.x ) * _zoom_level };
 
-			m_pixels[ quad_index + _quad_corner_index ].position = _pos + base_pos + m_offsets[ _quad_corner_index ] * m_zoom_level;
-		};
-
-		for( ; quad_index < m_pixels.getVertexCount(); quad_index += 4 )
-		{
-			set_new_pos( 0 );
-			set_new_pos( 1 );
-			set_new_pos( 2 );
-			set_new_pos( 3 );
+			_pixels[ _quad_index + quad_corner ].position = _pos + base_pos + m_offsets[ quad_corner ] * _zoom_level;
 		}
 	}
 
-	void CanvasManager::_update_pixel_size( float _new_pixel_size )
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Move all the pixels of the vertex array to the given position
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	void CanvasManager::_set_vertex_array_pos( const sf::Vector2f& _pos )
 	{
-		if( _new_pixel_size == m_zoom_level )
-			return;
-
-		auto quad_index{ 0 };
-
-		auto set_new_pos = [ this, &quad_index, &_new_pixel_size ]( int _quad_corner_index )
+		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
 		{
-			auto base_index{ get_pixel_index(  quad_index / 4 ) };
-			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * _new_pixel_size, ( base_index / m_image_size.x ) * _new_pixel_size };
+			_set_quad_pos_and_zoom( m_base_pixels, quad_index, m_zoom_level, _pos );
+			_set_quad_pos_and_zoom( m_converted_pixels, quad_index, m_zoom_level, _pos );
+		}
+	}
 
-			m_pixels[ quad_index + _quad_corner_index ].position = base_pos + m_offsets[ _quad_corner_index ] * _new_pixel_size;
-		};
-
-		for( ; quad_index < m_pixels.getVertexCount(); quad_index += 4 )
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Update the pixels to a new zoom level
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	void CanvasManager::_update_zoom_level( float _new_pixel_size )
+	{
+		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
 		{
-			set_new_pos( 0 );
-			set_new_pos( 1 );
-			set_new_pos( 2 );
-			set_new_pos( 3 );
+			_set_quad_pos_and_zoom( m_base_pixels, quad_index, _new_pixel_size );
+			_set_quad_pos_and_zoom( m_converted_pixels, quad_index, _new_pixel_size );
 		}
 
 		m_zoom_level = _new_pixel_size;
+	}
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Convert the base pixels to new colors according to the currently selected palette
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	void CanvasManager::_convert_image_colors()
+	{
+		const PalettesManager& palettes_manager{ g_perler_maker->get_palettes_manager() };
+
+		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
+		{
+			const sf::Color new_color{ palettes_manager.convert_color( m_base_pixels[ quad_index ].color ) };
+
+			m_converted_pixels[ quad_index + 0 ].color = new_color;
+			m_converted_pixels[ quad_index + 1 ].color = new_color;
+			m_converted_pixels[ quad_index + 2 ].color = new_color;
+			m_converted_pixels[ quad_index + 3 ].color = new_color;
+		}
 	}
 
 	uint32_t CanvasManager::get_pixel_index( uint32_t _quad_index )
@@ -209,13 +236,16 @@ namespace PerlerMaker
 		return m_pixels_descs[ _quad_index ].m_pixel_index;
 	}
 
+
+	///////////////// IMGUI /////////////////
+
 	void CanvasManager::_display_canvas( const sf::Color& _bg_color )
 	{
 		auto sprite_size{ m_canvas_size };
 		m_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
 		m_sprite.setPosition( ImGui::GetWindowPos() + sf::Vector2f{ 0.f, 1000.f } );
 		m_render_texture.clear( _bg_color );
-		m_render_texture.draw( m_pixels );
+		m_render_texture.draw( m_converted_pixels );
 		m_render_texture.display();
 
 		ImGui::Image( m_sprite );
@@ -241,12 +271,17 @@ namespace PerlerMaker
 
 		auto new_pixel_size{ m_zoom_level };
 		if( ImGui_fzn::small_slider_float( "Zoom level", &new_pixel_size, 1.f, 100.f, "x%.0f" ) )
-			_update_pixel_size( new_pixel_size );
+			_update_zoom_level( new_pixel_size );
 
 		ImGui::SameLine();
 
 		if( ImGui::SmallButton( "fit" ) )
 			_fit_image();
+
+		ImGui::SameLine();
+
+		if( ImGui::SmallButton( "convert" ) )
+			_convert_image_colors();
 	}
 
 } // namespace PerlerMaker

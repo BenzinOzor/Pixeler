@@ -39,6 +39,12 @@ namespace PerlerMaker
 
 		void update();
 
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Convert the given color to a new one according to the selected palette
+		// If no palette is selected, the given color will be returned
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		sf::Color convert_color( const sf::Color& _color ) const;
+
 	private:
 		void _load_palettes();
 		void _load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name );
@@ -46,7 +52,7 @@ namespace PerlerMaker
 		void _set_all_colors_selection( bool _selected );
 		void _select_colors_from_preset( std::string_view _preset );
 
-		// ImGui
+		///////////////// IMGUI /////////////////
 		void _header();
 		void _colors_list();
 		void _selectable_color_info( ColorInfos& _color );

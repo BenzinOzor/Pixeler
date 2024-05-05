@@ -13,6 +13,27 @@ namespace PerlerMaker
 {
 	class CanvasManager
 	{
+		/*enum EOffsetCorner
+		{
+			top_left,
+			top_right,
+			bottom_right,
+			bottom_left,
+			COUNT
+		};
+
+		enum EZoomDirection
+		{
+			up_left,
+			up_right,
+			down_right,
+			down_left,
+			COUNT
+		};
+
+		using ZoomDirectionOffsets = std::array< sf::Vector2f, EOffsetCorner::COUNT >;
+		using ZoomDirections = std::array< ZoomDirectionOffsets, EZoomDirection::COUNT >;*/
+
 		struct SPixelDesc
 		{
 			uint32_t m_pixel_index{ 0 };
@@ -31,20 +52,39 @@ namespace PerlerMaker
 
 		void _fit_image();
 	private:
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Load the base vertex array from the chosen image
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void _load_pixels( sf::Texture* _texture );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Move all the pixels of the vertex array to the given position
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void _set_vertex_array_pos( const sf::Vector2f& _pos );
-		void _update_pixel_size( float _new_pixel_size );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Move a quad to the given position and update its zoom level
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		void _set_quad_pos_and_zoom( sf::VertexArray& _pixels, int _quad_index, float _zoom_level, const sf::Vector2f& _pos = { 0.f, 0.f } );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Update the pixels to a new zoom level
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		void _update_zoom_level( float _new_zoom_level );
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Convert the base pixels to new colors according to the currently selected palette
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		void _convert_image_colors();
 
 		uint32_t get_pixel_index( uint32_t _quad_index );
 
-		//ImGui
+		///////////////// IMGUI /////////////////
 		void _display_canvas( const sf::Color& _bg_color );
 		void _display_bottom_bar();
 
 		sf::RenderTexture				m_render_texture;
 		sf::Sprite						m_default_image_sprite;
 		sf::Sprite						m_sprite;
-		sf::VertexArray					m_pixels;
+		sf::VertexArray					m_base_pixels;			// pixels created from the base image with its colors
+		sf::VertexArray					m_converted_pixels;		// pixels converted from the base ones using a given palette
 		std::vector< SPixelDesc >		m_pixels_descs;
 
 		sf::Vector2u					m_image_size{ 0, 0 };

@@ -252,6 +252,7 @@
     <ClCompile Include="PerlerMaker\Options.cpp" />
     <ClCompile Include="PerlerMaker\PalettesManager.cpp" />
     <ClCompile Include="PerlerMaker\PerlerMaker.cpp" />
+    <ClCompile Include="PerlerMaker\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Data\XMLFiles\Resources">
@@ -273,6 +274,7 @@
     <ClInclude Include="PerlerMaker\Options.h" />
     <ClInclude Include="PerlerMaker\PalettesManager.h" />
     <ClInclude Include="PerlerMaker\PerlerMaker.h" />
+    <ClInclude Include="PerlerMaker\Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

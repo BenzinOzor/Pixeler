@@ -5,6 +5,7 @@
 #include <FZN/Tools/Tools.h>
 
 #include "PalettesManager.h"
+#include "Utils.h"
 
 
 namespace PerlerMaker
@@ -38,6 +39,47 @@ namespace PerlerMaker
 		}
 
 		ImGui::End();
+	}
+
+	float color_norm( const sf::Color& _color )
+	{
+		return _color.r * _color.r + _color.g * _color.g + _color.b * _color.b;
+	}
+
+	float color_norm( const ImColor& _color )
+	{
+		return color_norm( Utils::to_sf_color( _color ) );
+	}
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Convert the given color to a new one according to the selected palette
+	// If no palette is selected, the given color will be returned
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	sf::Color PalettesManager::convert_color( const sf::Color& _color ) const
+	{
+		if( m_selected_palette == nullptr )
+			return _color;
+
+		ImColor converted_color{ _color };
+		sf::Vector3f smallest_deltas{ FLT_MAX, FLT_MAX, FLT_MAX };
+		sf::Vector3f palette_color_deltas{ FLT_MAX, FLT_MAX, FLT_MAX };
+
+		for( auto& color : m_selected_palette->m_colors )
+		{
+			const sf::Color palette_color{ Utils::to_sf_color( color.m_color ) };
+
+			palette_color_deltas.x = fabs( palette_color.r - _color.r );
+			palette_color_deltas.y = fabs( palette_color.g - _color.g );
+			palette_color_deltas.z = fabs( palette_color.b - _color.b );
+
+			if( palette_color_deltas.x <= smallest_deltas.x && palette_color_deltas.y <= smallest_deltas.y && palette_color_deltas.z <= smallest_deltas.z )
+			{
+				smallest_deltas = palette_color_deltas;
+				converted_color = color.m_color;
+			}
+		}
+
+		return Utils::to_sf_color( converted_color );
 	}
 
 	void PalettesManager::_load_palettes()
@@ -148,6 +190,9 @@ namespace PerlerMaker
 			}
 		}
 	}
+
+
+	///////////////// IMGUI /////////////////
 
 	void PalettesManager::_header()
 	{
