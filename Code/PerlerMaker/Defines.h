@@ -10,4 +10,6 @@ namespace PerlerMaker
 		alpha,
 		COUNT
 	};
+
+	static constexpr ImVec2 DefaultButtonSize{ 150.f, 0.f };
 } // namsepace PerlerMaker
