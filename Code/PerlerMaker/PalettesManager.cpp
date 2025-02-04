@@ -106,7 +106,13 @@ namespace PerlerMaker
 
 	void PalettesManager::_load_palettes()
 	{
-		const std::filesystem::path palette_files_directory{ DATAPATH( "XMLFiles/Palettes" ) };
+		const std::filesystem::path palette_files_directory{ g_pFZN_Core->GetSaveFolderPath() + "/Palettes" };
+		
+		if( std::filesystem::exists( palette_files_directory ) == false || std::filesystem::is_empty( palette_files_directory ) )
+		{
+			std::filesystem::copy( DATAPATH( "XMLFiles/Palettes" ), palette_files_directory, std::filesystem::copy_options::overwrite_existing );
+			FZN_DBLOG( "Palettes folder created, base palettes copied from data to folder." );
+		}
 
 		auto xml_file = tinyxml2::XMLDocument{};
 		auto file_name = std::string{};
@@ -114,7 +120,7 @@ namespace PerlerMaker
 		{
 			if( dir_entry.is_directory() )
 				continue;
-			
+
 			if( xml_file.LoadFile( dir_entry.path().string().c_str() ) )
 			{
 				FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s (%s)", xml_file.ErrorName(), xml_file.ErrorStr() );
