@@ -1,0 +1,82 @@
+<color_palette name="Hama beads">
+	<color id="01"	name="White"				rgb="229,236,241"		presets="owned,black and white" />
+	<color id="02"	name="Cream"				rgb="228,228,197" />
+	<color id="03"	name="Yellow"				rgb="233,199,4"			presets="owned" />
+	<color id="04"	name="Orange"				rgb="209,72,3" />
+	<color id="05"	name="Red"					rgb="180,6,14"			presets="owned" />
+	<color id="06"	name="Pink"					rgb="234,138,165" />
+	<color id="07"	name="Purple"				rgb="113,34,151" />
+	<color id="08"	name="Blue"					rgb="2,57,163" />
+	<color id="09"	name="Light Blue"			rgb="2,91,195" />
+	<color id="10"	name="Green"				rgb="2,118,67"			presets="owned" />
+	<color id="11"	name="Light Green"			rgb="25,207,167" />
+	<color id="12"	name="Brown"				rgb="62,39,26" />
+	<color id="13"	name="Transparent Red"		rgb="192,36,53" />
+	<color id="14"	name="Transparent Yellow"	rgb="228,170,50" />
+	<color id="15"	name="Transparent Blue"		rgb="72,126,213" />
+	<color id="16"	name="Transparent Green"	rgb="55,184,118" />
+	<color id="17"	name="Grey"					rgb="131,143,152" />
+	<color id="18"	name="Black"				rgb="20,19,21"			presets="black and white" />
+	<color id="19"	name="Clear"				rgb="216,210,206" />
+	<color id="20"	name="Reddish Brown"		rgb="141,42,15" />
+	<color id="21"	name="Light Brown"			rgb="190,108,33" />
+	<color id="22"	name="Dark Red"				rgb="145,2,10" />
+	<color id="24"	name="Translucent Purple"	rgb="104,62,154" />
+	<color id="25"	name="Translucent Brown"	rgb="135,89,61" />
+	<color id="26"	name="Matt Rose"			rgb="232,164,152" />
+	<color id="27"	name="Beige"				rgb="220,177,142" />
+	<color id="28"	name="Dark Green"			rgb="30,40,28" />
+	<color id="29"	name="Claret"				rgb="191,1,66" />
+	<color id="30"	name="Burgundy"				rgb="78,12,27" />
+	<color id="31"	name="Turquoise"			rgb="72,154,185" />
+	<color id="32"	name="Neon Fuchsia"			rgb="255,32,141" />
+	<color id="33"	name="Cerise"				rgb="255,57,86" />
+	<color id="34"	name="Neon Yellow"			rgb="229,239,19" />
+	<color id="35"	name="Neon Red"				rgb="255,40,51" />
+	<color id="36"	name="Neon Blue"			rgb="35,83,176" />
+	<color id="37"	name="Neon Green"			rgb="6,183,60" />
+	<color id="38"	name="Neon Orange"			rgb="253,134,0" />
+	<color id="39"	name="Fluorescent Yellow"	rgb="241,242,28" />
+	<color id="40"	name="Fluorescent Orange"	rgb="254,99,11" />
+	<color id="41"	name="Fluorescent Blue"		rgb="38,89,178" />
+	<color id="42"	name="Fluorescent Green"	rgb="12,189,81" />
+	<color id="43"	name="Pastel Yellow"		rgb="231,228,90" />
+	<color id="44"	name="Pastel Red"			rgb="249,97,96" />
+	<color id="45"	name="Pastel Purple"		rgb="142,105,205" />
+	<color id="46"	name="Pastel Blue"			rgb="81,174,228" />
+	<color id="47"	name="Pastel Green"			rgb="128,223,150" />
+	<color id="48"	name="Pastel Pink"			rgb="214,122,209" />
+	<color id="49"	name="Azure"				rgb="15,172,209" />
+	<color id="60"	name="Teddybear Brown"		rgb="240,152,30" />
+	<color id="70"	name="Light Grey"			rgb="165,179,192" />
+	<color id="71"	name="Dark Grey"			rgb="68,80,89" />
+	<color id="75"	name="Tan"					rgb="183,140,109" />
+	<color id="76"	name="Nougat"				rgb="138,89,55" />
+	<color id="77"	name="Cloudy White"			rgb="206,209,200" />
+	<color id="78"	name="Light Peach"			rgb="247,193,170" />
+	<color id="79"	name="Apricot"				rgb="248,118,51" />
+	<color id="82"	name="Plum"					rgb="145,23,90" />
+	<color id="83"	name="Petrol"				rgb="3,122,159" />
+	<color id="84"	name="Olive Green"			rgb="104,120,54" />
+	<color id="95"	name="Pastel Rose"			rgb="221,155,163" />
+	<color id="96"	name="Pastel Lilac"			rgb="180,145,173" />
+	<color id="97"	name="Pastel Ice Blue"		rgb="138,175,194" />
+	<color id="98"	name="Pastel Mint"			rgb="148,204,164" />
+	<color id="55"	name="Glow in the dark Green"	rgb="250,248,237" />
+	<color id="56"	name="Glow in the dark Red"		rgb="237,191,159" />
+	<color id="57"	name="Glow in the dark Blue"	rgb="196,208,227" />
+	<color id="61"	name="Gold"						rgb="217,147,80" />
+	<color id="62"	name="Silver"					rgb="72,71,74" />
+	<color id="63"	name="Bronze"					rgb="66,49,47" />
+	<color id="64"	name="Pearl"					rgb="239,235,228" />
+	<color id="72"	name="Translucent Pink"			rgb="240,151,176" />
+	<color id="73"	name="Translucent Aqua"			rgb="89,174,245" />
+	<color id="74"	name="Translucent Lilac"		rgb="91,85,189" />
+	<color id="101"	name="Eucalyptus"				rgb="169,195,155" />
+	<color id="102"	name="Forest Green"				rgb="53,107,45" />
+	<color id="103"	name="Light Yellow"				rgb="255,230,96" />
+	<color id="104"	name="Lime"						rgb="188,209,34" />
+	<color id="105"	name="Light Apricot"			rgb="255,172,120" />
+	<color id="106"	name="Light Lavender"			rgb="204,197,237" />
+	<color id="107"	name="Lavender"					rgb="106,135,193" />
+</color_palette>

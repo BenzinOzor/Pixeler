@@ -1,4 +1,6 @@
-﻿#include <FZN/Managers/FazonCore.h>
+﻿#include <filesystem>
+
+#include <FZN/Managers/FazonCore.h>
 #include <FZN/Managers/DataManager.h>
 #include <FZN/UI/ImGui.h>
 
@@ -90,18 +92,24 @@ namespace PerlerMaker
 	{
 		if( ImGui::BeginMainMenuBar() )
 		{
-			if( ImGui::BeginMenu( "Fichier" ) )
+			if( ImGui::BeginMenu( "File" ) )
 			{
-				if( ImGui::MenuItem( "Charger Image" ) )
+				if( ImGui::MenuItem( "Load Image" ) )
 					_load_image();
 
-				//if( ImGui::MenuItem( "Saver Perler" ) ) {}
-				//if( ImGui::MenuItem( "Saver Perler Sous..." ) ) {}
+				if( ImGui::MenuItem( "Restore Base Palettes Default Values" ) )
+					m_palettes_manager.reset_base_palettes();
+
+				if( ImGui::IsItemHovered() )
+					ImGui::SetTooltip( "Restore default colors and presets of palettes located in '%s'.\nDoesn't affect custom palettes.", std::string{ g_pFZN_Core->GetSaveFolderPath() + "/Palettes/Base" }.c_str() );
+
+				//if( ImGui::MenuItem( "Sauver Perler" ) ) {}
+				//if( ImGui::MenuItem( "Sauver Perler Sous..." ) ) {}
 
 				ImGui::EndMenu();
 			}
 
-			if( ImGui::BeginMenu( "Outils" ) )
+			if( ImGui::BeginMenu( "Tools" ) )
 			{
 				if( ImGui::MenuItem( "Options" ) )
 					m_options.show_window();

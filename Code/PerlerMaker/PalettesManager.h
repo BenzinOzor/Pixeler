@@ -30,6 +30,7 @@ namespace PerlerMaker
 		struct ColorPalette
 		{
 			std::string m_name{};
+			std::string m_file_path{};
 			ColorInfosVector m_colors;
 			std::unordered_map< std::string, std::vector< uint32_t > > m_presets;	// for each preset name, a list of selected colors (by index in the vector).
 		};
@@ -46,9 +47,12 @@ namespace PerlerMaker
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		sf::Color convert_color( const sf::Color& _color ) const;
 
+		void reset_base_palettes();
+
 	private:
 		void _load_palettes();
-		void _load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name );
+		void _load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name, bool _bOverride = false );
+		void _save_palette();
 
 		void _set_all_colors_selection( bool _selected );
 		void _select_colors_from_preset( std::string_view _preset );
@@ -59,6 +63,11 @@ namespace PerlerMaker
 		void _colors_list();
 		void _selectable_color_info( ColorInfos& _color );
 		void _edit_color();
+		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );
+		std::string _get_palette_root_path( const std::string& _path );
+
+		const std::string			m_fzn_palettes_path{};
+		const std::string			m_app_palettes_path{};
 
 		ColorPalettes		m_palettes;
 		ColorPalette*		m_selected_palette{ nullptr };

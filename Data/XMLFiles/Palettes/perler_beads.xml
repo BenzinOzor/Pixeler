@@ -1,8 +1,0 @@
-<color_palette name="Hama beads">
-	<color id="01"	name="White"	rgb="255,255,255"	presets="owned,black and white" />
-	<color id="03"	name="Yellow"	rgb="255,215,90"	presets="owned" />
-	<color id="05"	name="Red"		rgb="255,0,0"		presets="owned" />
-	<color id="09"	name="Blue"		rgb="0,0,255" />
-	<color id="10"	name="Green"	rgb="0,255,0"		presets="owned" />
-	<color id="18"	name="Black"	rgb="0,0,0"			presets="black and white" />
-</color_palette>

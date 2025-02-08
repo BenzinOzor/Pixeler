@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <algorithm>
 
 #include <FZN/Managers/FazonCore.h>
 #include <FZN/Tools/Logging.h>
@@ -41,7 +42,9 @@ namespace PerlerMaker
 		return color_name;
 	}
 
-	PalettesManager::PalettesManager()
+	PalettesManager::PalettesManager():
+		m_fzn_palettes_path( g_pFZN_Core->GetDataPath( "XMLFiles/Palettes" ) ),
+		m_app_palettes_path( g_pFZN_Core->GetSaveFolderPath() + "/Palettes" )
 	{
 		_load_palettes();
 	}
@@ -104,19 +107,45 @@ namespace PerlerMaker
 		return Utils::to_sf_color( converted_color );
 	}
 
+	void PalettesManager::reset_base_palettes()
+	{
+		const std::filesystem::path fzn_base_palettes_directory{ m_fzn_palettes_path + "/Base" };
+		const std::filesystem::path app_base_palettes_directory{ m_app_palettes_path + "/Base" };
+
+		std::filesystem::copy( fzn_base_palettes_directory, app_base_palettes_directory, std::filesystem::copy_options::overwrite_existing );
+
+		auto xml_file = tinyxml2::XMLDocument{};
+		auto file_name = std::string{};
+		for( const auto& dir_entry : std::filesystem::recursive_directory_iterator{ app_base_palettes_directory } )
+		{
+			if( dir_entry.is_directory() )
+				continue;
+
+			if( xml_file.LoadFile( dir_entry.path().string().c_str() ) )
+			{
+				FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s (%s)", xml_file.ErrorName(), xml_file.ErrorStr() );
+				continue;
+			}
+
+			file_name = fzn::Tools::GetFileNameFromPath( dir_entry.path().string().c_str(), true );
+
+			FZN_DBLOG( "Parsing %s...", file_name.c_str() );
+
+			_load_palette( xml_file.FirstChildElement( "color_palette" ), file_name, true );
+		}
+	}
+
 	void PalettesManager::_load_palettes()
 	{
-		const std::filesystem::path palette_files_directory{ g_pFZN_Core->GetSaveFolderPath() + "/Palettes" };
-		
-		if( std::filesystem::exists( palette_files_directory ) == false || std::filesystem::is_empty( palette_files_directory ) )
+		if( std::filesystem::exists( m_app_palettes_path ) == false || std::filesystem::is_empty( m_app_palettes_path ) )
 		{
-			std::filesystem::copy( DATAPATH( "XMLFiles/Palettes" ), palette_files_directory, std::filesystem::copy_options::overwrite_existing );
+			std::filesystem::copy( m_fzn_palettes_path, m_app_palettes_path, std::filesystem::copy_options::overwrite_existing );
 			FZN_DBLOG( "Palettes folder created, base palettes copied from data to folder." );
 		}
 
 		auto xml_file = tinyxml2::XMLDocument{};
-		auto file_name = std::string{};
-		for( const auto& dir_entry : std::filesystem::recursive_directory_iterator{ palette_files_directory } )
+		auto file_root = std::string{};
+		for( const auto& dir_entry : std::filesystem::recursive_directory_iterator{ m_app_palettes_path } )
 		{
 			if( dir_entry.is_directory() )
 				continue;
@@ -127,18 +156,18 @@ namespace PerlerMaker
 				continue;
 			}
 			
-			file_name = fzn::Tools::GetFileNameFromPath( dir_entry.path().string().c_str(), true );
+			file_root = _get_palette_root_path( dir_entry.path().string() );
 
-			FZN_DBLOG( "Parsing %s...", file_name.c_str() );
+			FZN_DBLOG( "Parsing %s...", file_root.data() );
 
-			_load_palette( xml_file.FirstChildElement( "color_palette" ), file_name );
+			_load_palette( xml_file.FirstChildElement( "color_palette" ), file_root );
 		}
 
 		m_selected_palette = &m_palettes.begin()->second;
 		m_selected_preset = preset_all;
 	}
 
-	void PalettesManager::_load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name )
+	void PalettesManager::_load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name, bool _bOverride /*= false*/ )
 	{
 		if( _palette == nullptr )
 			return;
@@ -146,11 +175,20 @@ namespace PerlerMaker
 		auto color_palette = ColorPalette{};
 
 		color_palette.m_name = fzn::Tools::XMLStringAttribute( _palette, "name" );
+		color_palette.m_file_path = _file_name;
 
 		if( color_palette.m_name.empty() )
 		{
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Couldn't find color palette name. Using file name instead." );
-			color_palette.m_name = fzn::Tools::GetFileNameFromPath( _file_name.data() );
+			color_palette.m_name = fzn::Tools::GetFileNameFromPath( color_palette.m_file_path );
+		}
+		
+		const bool already_in_map = m_palettes.find( color_palette.m_name ) != m_palettes.end();
+
+		if( _bOverride == false && already_in_map )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "A palette named '%s' already exists. Ignoring the new one.", color_palette.m_name.c_str() );
+			return;
 		}
 
 		FZN_DBLOG( "\tCreating palette named '%s'...", color_palette.m_name.c_str() );
@@ -188,7 +226,74 @@ namespace PerlerMaker
 			color_settings = color_settings->NextSiblingElement( "color" );
 		}
 
-		m_palettes[ color_palette.m_name ] = std::move( color_palette );
+		FZN_DBLOG( "\tAdded palette '%s' to catalog", color_palette.m_name.c_str() );
+
+		if( already_in_map )
+		{
+			if( m_selected_palette->m_name == color_palette.m_name )
+			{
+				m_selected_palette = &( m_palettes[ color_palette.m_name ] = std::move( color_palette ) );
+				m_selected_preset = preset_all;
+			}
+		}
+		else
+			m_palettes[ color_palette.m_name ] = std::move( color_palette );
+	}
+
+	void PalettesManager::_save_palette()
+	{
+		auto to_string = []( const ImColor& _color )
+		{
+			const auto sf_color{ Utils::to_sf_color( _color ) };
+			return fzn::Tools::Sprintf( "%d,%d,%d", sf_color.r, sf_color.g, sf_color.b );
+		};
+
+		if( m_selected_palette == nullptr )
+			return;
+
+		tinyxml2::XMLDocument dest_file{};
+		auto* color_palette{ dest_file.NewElement( "color_palette" ) };
+		dest_file.InsertEndChild( color_palette );
+
+		std::string presets{};
+
+		color_palette->SetAttribute( "name", m_selected_palette->m_name.c_str() );
+
+		for( auto color_id{ 0 }; auto& color : m_selected_palette->m_colors )
+		{
+			if( color.is_valid() == false )
+			{
+				++color_id;
+				continue;
+			}
+
+			auto* xml_color{ dest_file.NewElement( "color" ) };
+
+			if( color.m_id >= 0 )
+				xml_color->SetAttribute( "id", color.m_id );
+
+			if( color.m_name.empty() == false )
+				xml_color->SetAttribute( "name", color.m_name.c_str() );
+
+			xml_color->SetAttribute( "rgb", to_string( color.m_color ).c_str() );
+
+			presets = std::move( _get_presets_from_color_index( m_selected_palette, color_id++ ) );
+
+			if( presets.empty() == false )
+				xml_color->SetAttribute( "presets", presets.c_str() );
+
+			color_palette->InsertEndChild( xml_color );
+		}
+
+		std::string palette_path{ m_app_palettes_path + "\\" + m_selected_palette->m_file_path };
+
+		if( dest_file.SaveFile( palette_path.c_str() ) )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s (%s)", dest_file.ErrorName(), dest_file.ErrorStr() );
+			return;
+		}
+
+		FZN_DBLOG( "Saved palette '%s' at '%s'", m_selected_palette->m_name.c_str(), palette_path.c_str() );
 	}
 
 	void PalettesManager::_set_all_colors_selection( bool _selected )
@@ -268,9 +373,8 @@ namespace PerlerMaker
 			if( m_palette_edition )
 			{
 				ImGui::SameLine();
-				ImGui::Button( "Save Palette" );
-				ImGui::SameLine();
-				ImGui::Button( "Save Palette As..." );
+				if( ImGui::Button( "Save Palette" ) )
+					_save_palette();
 			}
 
 			ImGui::TableNextColumn();
@@ -531,4 +635,37 @@ namespace PerlerMaker
 
 		ImGui::End();
 	}
+
+	std::string PalettesManager::_get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index )
+	{
+		if( _palette == nullptr || _color_index >= _palette->m_colors.size() )
+			return {};
+
+		std::string result;
+
+		for( auto& preset : _palette->m_presets )
+		{
+			if( preset.first == "All" )
+				continue;
+
+			if( std::ranges::find( preset.second, _color_index ) != preset.second.end() )
+				result += preset.first + ",";
+		}
+
+		if( result.empty() == false )
+			result.erase( result.size() - 1 );
+
+		return result;
+	}
+
+	std::string PalettesManager::_get_palette_root_path( const std::string& _path )
+	{
+		auto diff_pos{ _path.find_first_not_of( m_app_palettes_path ) };
+
+		if( diff_pos == std::string::npos )
+			return {};
+
+		return _path.substr( diff_pos + 1 );
+	}
+
 } // namespace PerlerMaker
