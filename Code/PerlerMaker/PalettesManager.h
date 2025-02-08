@@ -13,6 +13,8 @@ namespace tinyxml2
 
 namespace PerlerMaker
 {
+	static const std::string preset_all{ "All" };
+
 	class PalettesManager
 	{
 		struct ColorInfos
@@ -58,13 +60,15 @@ namespace PerlerMaker
 		void _select_colors_from_preset( std::string_view _preset );
 		void _reset_color_to_edit();
 
+		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );
+		std::string _get_palette_root_path( const std::string& _path );
+
 		///////////////// IMGUI /////////////////
 		void _header();
 		void _colors_list();
 		void _selectable_color_info( ColorInfos& _color );
 		void _edit_color();
-		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );
-		std::string _get_palette_root_path( const std::string& _path );
+		
 
 		const std::string			m_fzn_palettes_path{};
 		const std::string			m_app_palettes_path{};

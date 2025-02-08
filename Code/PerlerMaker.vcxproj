@@ -251,6 +251,7 @@
     <ClCompile Include="PerlerMaker\main.cpp" />
     <ClCompile Include="PerlerMaker\Options.cpp" />
     <ClCompile Include="PerlerMaker\PalettesManager.cpp" />
+    <ClCompile Include="PerlerMaker\PalettesManager_ui.cpp" />
     <ClCompile Include="PerlerMaker\PerlerMaker.cpp" />
     <ClCompile Include="PerlerMaker\Utils.cpp" />
   </ItemGroup>

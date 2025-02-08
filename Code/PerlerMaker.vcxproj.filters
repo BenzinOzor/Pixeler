@@ -33,6 +33,9 @@
     <ClCompile Include="PerlerMaker\Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PerlerMaker\PalettesManager_ui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Data\XMLFiles\Resources" />
