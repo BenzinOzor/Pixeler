@@ -1,8 +1,10 @@
 #include <filesystem>
 #include <algorithm>
+#include <limits>
 
 #include <FZN/Managers/FazonCore.h>
 #include <FZN/Tools/Logging.h>
+#include <FZN/Tools/Math.h>
 #include <FZN/Tools/Tools.h>
 
 #include "PalettesManager.h"
@@ -77,32 +79,36 @@ namespace PerlerMaker
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	sf::Color PalettesManager::convert_color( const sf::Color& _color ) const
 	{
+		auto get_distance = []( const ImColor& _color_a, const ImColor& _color_b )
+		{
+			return fzn::Math::Square( _color_b.Value.x - _color_a.Value.x ) + fzn::Math::Square( _color_b.Value.y - _color_a.Value.y ) + fzn::Math::Square( _color_b.Value.z - _color_a.Value.z );
+		};
+		
 		if( m_selected_palette == nullptr )
 			return _color;
-
+		
 		ImColor converted_color{ _color };
-		sf::Vector3f smallest_deltas{ FLT_MAX, FLT_MAX, FLT_MAX };
-		sf::Vector3f palette_color_deltas{ FLT_MAX, FLT_MAX, FLT_MAX };
+		ImColor* smallest_distance_color{ nullptr };
+		float smallest_distance{ Flt_Max };
+		float current_distance{ Flt_Max };
 
 		for( auto& color : m_selected_palette->m_colors )
 		{
 			if( color.m_selected == false )
 				continue;
 
-			const sf::Color palette_color{ Utils::to_sf_color( color.m_color ) };
-
-			palette_color_deltas.x = fabs( palette_color.r - _color.r );
-			palette_color_deltas.y = fabs( palette_color.g - _color.g );
-			palette_color_deltas.z = fabs( palette_color.b - _color.b );
-
-			if( palette_color_deltas.x <= smallest_deltas.x && palette_color_deltas.y <= smallest_deltas.y && palette_color_deltas.z <= smallest_deltas.z )
+			current_distance = get_distance( converted_color, color.m_color );
+			if( current_distance < smallest_distance )
 			{
-				smallest_deltas = palette_color_deltas;
-				converted_color = color.m_color;
+				smallest_distance = current_distance;
+				smallest_distance_color = &color.m_color;
 			}
 		}
 
-		return Utils::to_sf_color( converted_color );
+		if( smallest_distance_color != nullptr )
+			return Utils::to_sf_color( *smallest_distance_color );
+
+		return _color;
 	}
 
 	void PalettesManager::reset_base_palettes()
