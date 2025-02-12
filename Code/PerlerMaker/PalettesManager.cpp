@@ -22,7 +22,7 @@ namespace PerlerMaker
 		if( _test_color_only )
 			return true;
 
-		if( m_id < 0 && m_name.empty() )
+		if( m_id <= Invalid_ID && m_name.empty() )
 			return false;
 
 
@@ -366,4 +366,19 @@ namespace PerlerMaker
 		return _path.substr( diff_pos + 1 );
 	}
 
+	bool PalettesManager::match_filter( const ColorInfos& _color )
+	{
+		if( _color.m_id > ColorInfos::Invalid_ID )
+		{
+			std::vector< int > IDs{ fzn::Tools::extract_numbers( m_color_filter ) };
+
+			for( int ID : IDs )
+			{
+				if( _color.m_id == ID )
+					return true;
+			}
+		}
+
+		return fzn::Tools::match_filter( m_color_filter, _color.m_name );
+	}
 } // namespace PerlerMaker

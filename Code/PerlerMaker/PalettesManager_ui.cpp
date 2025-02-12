@@ -94,6 +94,9 @@ namespace PerlerMaker
 			ImGui::EndTable();
 		}
 
+		ImGui::Separator();
+		ImGui_fzn::Filter( m_color_filter, "Search color by name or ID" );
+
 		if( ImGui::BeginTable( "selections", 2 ) )
 		{
 			ImGui::TableNextColumn();
@@ -180,6 +183,9 @@ namespace PerlerMaker
 
 	void PalettesManager::_selectable_color_info( ColorInfos& _color )
 	{
+		if( match_filter( _color ) == false )
+			return;
+
 		auto color_name{ _color.get_full_name() };
 		auto cursor_pos{ ImGui::GetCursorPos() };
 		auto cursor_screen_pos{ ImGui::GetCursorScreenPos() };

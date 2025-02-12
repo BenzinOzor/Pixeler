@@ -19,11 +19,13 @@ namespace PerlerMaker
 	{
 		struct ColorInfos
 		{
+			static constexpr int Invalid_ID{ -1 };
+
 			bool				is_valid( bool _test_color_only = false ) const;
 			std::string			get_full_name() const;		// "id - name"
 
 			std::string			m_name{};					// can be empty
-			int					m_id{ -1 };					// can be invalid
+			int					m_id{ Invalid_ID };					// can be invalid
 			ImColor				m_color{ -1, -1, -1, -1 };
 			bool				m_selected{ true };
 		};
@@ -63,6 +65,8 @@ namespace PerlerMaker
 		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );
 		std::string _get_palette_root_path( const std::string& _path );
 
+		bool match_filter( const ColorInfos& _color );
+
 		///////////////// IMGUI /////////////////
 		void _header();
 		void _colors_list();
@@ -80,5 +84,6 @@ namespace PerlerMaker
 		bool				m_palette_edition{ false };
 		ColorInfos*			m_color_to_edit{ nullptr };
 		ColorInfos			m_edited_color;
+		std::string			m_color_filter{};
 	};
 } // namespace PerlerMaker
