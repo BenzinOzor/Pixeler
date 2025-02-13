@@ -30,13 +30,14 @@ namespace PerlerMaker
 			bool				m_selected{ true };
 		};
 		using ColorInfosVector = std::vector< ColorInfos >;
+		using ColorPreset = std::vector< int >;
 
 		struct ColorPalette
 		{
 			std::string m_name{};
 			std::string m_file_path{};
 			ColorInfosVector m_colors;
-			std::unordered_map< std::string, std::vector< uint32_t > > m_presets;	// for each preset name, a list of selected colors (by index in the vector).
+			std::unordered_map< std::string, ColorPreset > m_presets;	// for each preset name, a list of selected colors (by index in the vector).
 		};
 		using ColorPalettes = std::unordered_map< std::string, ColorPalette >;
 
@@ -60,6 +61,7 @@ namespace PerlerMaker
 
 		void _set_all_colors_selection( bool _selected );
 		void _select_colors_from_preset( std::string_view _preset );
+		bool _update_preset();
 		void _reset_color_to_edit();
 
 		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );

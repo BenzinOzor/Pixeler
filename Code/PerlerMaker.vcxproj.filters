@@ -42,7 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\Data\XMLFiles\actionKeys.xml" />
-    <Xml Include="..\Data\XMLFiles\Palettes\perler_beads.xml" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Data\res.rc">

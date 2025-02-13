@@ -83,9 +83,13 @@ namespace PerlerMaker
 			}
 
 			ImGui::TableNextColumn();
-			ImGui::Button( "Save Preset" );
+			if( ImGui_fzn::deactivable_button( "Save Preset", m_selected_preset == preset_all ) )
+			{
+				if( _update_preset() )
+					_save_palette();
+			}
 			ImGui::SameLine();
-			ImGui::Button( "Save Preset As..." );
+			ImGui_fzn::deactivable_button( "Save Preset As...", m_selected_preset == preset_all );
 
 			if( m_selected_palette == nullptr )
 				ImGui::PopItemFlag();

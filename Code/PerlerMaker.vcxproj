@@ -264,7 +264,6 @@
     <Xml Include="..\Data\XMLFiles\actionKeys.xml">
       <SubType>Designer</SubType>
     </Xml>
-    <Xml Include="..\Data\XMLFiles\Palettes\perler_beads.xml" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Data\res.rc" />

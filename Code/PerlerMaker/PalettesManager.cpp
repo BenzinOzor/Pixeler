@@ -328,6 +328,37 @@ namespace PerlerMaker
 		}
 	}
 
+	bool PalettesManager::_update_preset()
+	{
+		if( m_selected_palette == nullptr || m_selected_preset.empty() )
+			return false;
+
+		auto it_preset{ m_selected_palette->m_presets.find( std::string{ m_selected_preset } ) };
+
+		if( it_preset == m_selected_palette->m_presets.end() )
+			return false;
+
+		ColorPreset new_preset;
+		new_preset.reserve( m_selected_palette->m_colors.size() );
+
+		for( auto color_id{ 0 }; auto & color : m_selected_palette->m_colors )
+		{
+			if( color.m_selected )
+				new_preset.push_back( color_id );
+
+			++color_id;
+		}
+
+		if( new_preset.empty() )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Couldn't save an empty preset. Ignoring." );
+			return false;
+		}
+
+		it_preset->second = std::move( new_preset );
+		return true;
+	}
+
 	void PalettesManager::_reset_color_to_edit()
 	{
 		m_edited_color = ColorInfos{};
