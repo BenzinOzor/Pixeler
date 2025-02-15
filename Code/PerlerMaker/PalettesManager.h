@@ -86,6 +86,7 @@ namespace PerlerMaker
 		std::string_view	m_selected_preset{};
 
 		bool				m_palette_edition{ false };
+		bool				m_only_used_colors_display{ false };
 		ColorInfos*			m_color_to_edit{ nullptr };
 		ColorInfos			m_edited_color;
 		std::string			m_color_filter{};

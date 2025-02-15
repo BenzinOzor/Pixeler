@@ -101,6 +101,8 @@ namespace PerlerMaker
 		ImGui::Separator();
 		ImGui_fzn::Filter( m_color_filter, "Search color by name or ID" );
 
+		ImGui::Checkbox( "Display only used colors", &m_only_used_colors_display );
+
 		if( ImGui::BeginTable( "selections", 2 ) )
 		{
 			ImGui::TableNextColumn();
@@ -194,7 +196,7 @@ namespace PerlerMaker
 
 	void PalettesManager::_selectable_color_info( ColorInfos& _color )
 	{
-		if( match_filter( _color ) == false )
+		if( match_filter( _color ) == false || m_only_used_colors_display && _color.m_count == 0 )
 			return;
 
 		const std::string color_name{ _color.m_count > 0 ? fzn::Tools::Sprintf( "%s (%d)", _color.get_full_name().c_str(), _color.m_count ) : _color.get_full_name() };
