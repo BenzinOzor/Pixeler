@@ -25,9 +25,10 @@ namespace PerlerMaker
 			std::string			get_full_name() const;		// "id - name"
 
 			std::string			m_name{};					// can be empty
-			int					m_id{ Invalid_ID };					// can be invalid
+			int					m_id{ Invalid_ID };			// can be invalid
 			ImColor				m_color{ -1, -1, -1, -1 };
 			bool				m_selected{ true };
+			int					m_count{ -1 };				// if -1, convertion hasn't been done yet
 		};
 		using ColorInfosVector = std::vector< ColorInfos >;
 		using ColorPreset = std::vector< int >;
@@ -53,6 +54,7 @@ namespace PerlerMaker
 		sf::Color convert_color( const sf::Color& _color ) const;
 
 		void reset_base_palettes();
+		void reset_color_counts();
 
 	private:
 		void _load_palettes();

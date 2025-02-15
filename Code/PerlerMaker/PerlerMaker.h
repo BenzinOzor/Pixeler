@@ -17,8 +17,10 @@ namespace PerlerMaker
 
 		void display();
 
-		const Options&			get_options() const				{ return m_options; }
-		const PalettesManager&	get_palettes_manager() const	{ return m_palettes_manager; }
+		const	Options&			get_options() const				{ return m_options; }
+				Options&			get_options()					{ return m_options; }
+		const	PalettesManager&	get_palettes_manager() const	{ return m_palettes_manager; }
+				PalettesManager&	get_palettes_manager()			{ return m_palettes_manager; }
 
 	private:
 		void _load_image();

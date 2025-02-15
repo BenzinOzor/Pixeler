@@ -281,7 +281,10 @@ namespace PerlerMaker
 		ImGui::SameLine();
 
 		if( ImGui::SmallButton( "convert" ) )
+		{
+			g_perler_maker->get_palettes_manager().reset_color_counts();
 			_convert_image_colors();
+		}
 	}
 
 } // namespace PerlerMaker

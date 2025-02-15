@@ -149,16 +149,23 @@ namespace PerlerMaker
 		ImGui::EndChild();
 	}
 
-	void bicolor_color_name( std::string_view _color, bool _bold )
+	void bicolor_color_name( std::string_view _color, bool _bold, bool _used )
 	{
 		auto first_number_pos{ _color.find_first_not_of( '0' ) };
+
+		const ImGuiStyle style{ ImGui::GetStyle() };
+
+		const bool grayed_out{ _used == false && _bold == false };
+
+		const ImColor leading_zeros_color{ grayed_out ? ImGui_fzn::color::dark_gray : ImGui_fzn::color::gray };
+		const ImColor id_name_color{ grayed_out ? ImGui_fzn::color::gray : style.Colors[ ImGuiCol_Text ] };
 
 		if( first_number_pos == std::string::npos )
 		{
 			if( _bold )
-				ImGui_fzn::bold_text( _color );
+				ImGui_fzn::bold_text_colored( id_name_color, _color );
 			else
-				ImGui::Text( _color.data() );
+				ImGui::TextColored( id_name_color, _color.data() );
 
 			return;
 		}
@@ -171,15 +178,15 @@ namespace PerlerMaker
 
 		if( _bold )
 		{
-			ImGui_fzn::bold_text_colored( ImGui_fzn::color::gray, leading_zeros );
+			ImGui_fzn::bold_text_colored( leading_zeros_color, leading_zeros );
 			ImGui::SameLine();
-			ImGui_fzn::bold_text( number );
+			ImGui_fzn::bold_text_colored( id_name_color, number );
 		}
 		else
 		{
-			ImGui::TextColored( ImGui_fzn::color::gray, leading_zeros.c_str() );
+			ImGui::TextColored( leading_zeros_color, leading_zeros.c_str() );
 			ImGui::SameLine();
-			ImGui::Text( number.c_str() );
+			ImGui::TextColored( id_name_color, number.c_str() );
 		}
 
 		ImGui::GetStyle().ItemSpacing.x = spacing_backup;
@@ -190,7 +197,7 @@ namespace PerlerMaker
 		if( match_filter( _color ) == false )
 			return;
 
-		auto color_name{ _color.get_full_name() };
+		const std::string color_name{ _color.m_count > 0 ? fzn::Tools::Sprintf( "%s (%d)", _color.get_full_name().c_str(), _color.m_count ) : _color.get_full_name() };
 		auto cursor_pos{ ImGui::GetCursorPos() };
 		auto cursor_screen_pos{ ImGui::GetCursorScreenPos() };
 		auto hovered{ false };
@@ -217,10 +224,14 @@ namespace PerlerMaker
 			ImGui::PushStyleColor( ImGuiCol_FrameBg, ImColor{ 34, 59, 92 }.Value );
 			ImGui::Checkbox( fzn::Tools::Sprintf( "##checkbox_%s", color_name.c_str() ).c_str(), &_color.m_selected );
 			ImGui::PopStyleColor();
+
+			if( ImGui::IsItemHovered() )
+			{
+				ImGui::SetTooltip( "Check to use this color." );
+			}
 		}
 		else
 		{
-			//ImGui::Button( "-", { shadow_size.x, 0.f } );
 			ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
 			ImGui_fzn::square_button( "-" );
 			ImGui::PopFont();
@@ -250,7 +261,7 @@ namespace PerlerMaker
 		if( ImGui::IsItemHovered() )
 		{
 			ImGui::BeginTooltip();
-			bicolor_color_name( color_name, true );
+			bicolor_color_name( color_name, true, _color.m_count != 0 );
 			ImGui::Separator();
 
 			ImGuiContext& g = *GImGui;
@@ -277,11 +288,11 @@ namespace PerlerMaker
 			ImGui::SameLine();
 			ImGui::SetNextItemAllowOverlap();
 			ImGui::SetCursorPos( test_cursor_pos );
-			bicolor_color_name( color_name, true );
+			bicolor_color_name( color_name, true, _color.m_count != 0 );
 
 		}
 		else
-			bicolor_color_name( color_name.c_str(), false );
+			bicolor_color_name( color_name.c_str(), false, _color.m_count != 0 );
 	}
 
 	void PalettesManager::_edit_color()

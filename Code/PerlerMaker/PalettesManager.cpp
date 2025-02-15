@@ -88,7 +88,7 @@ namespace PerlerMaker
 			return _color;
 		
 		ImColor converted_color{ _color };
-		ImColor* smallest_distance_color{ nullptr };
+		ColorInfos* smallest_distance_color{ nullptr };
 		float smallest_distance{ Flt_Max };
 		float current_distance{ Flt_Max };
 
@@ -101,12 +101,15 @@ namespace PerlerMaker
 			if( current_distance < smallest_distance )
 			{
 				smallest_distance = current_distance;
-				smallest_distance_color = &color.m_color;
+				smallest_distance_color = &color;
 			}
 		}
 
 		if( smallest_distance_color != nullptr )
-			return Utils::to_sf_color( *smallest_distance_color );
+		{
+			++smallest_distance_color->m_count;
+			return Utils::to_sf_color( smallest_distance_color->m_color );
+		}
 
 		return _color;
 	}
@@ -137,6 +140,15 @@ namespace PerlerMaker
 
 			_load_palette( xml_file.FirstChildElement( "color_palette" ), file_name, true );
 		}
+	}
+
+	void PalettesManager::reset_color_counts()
+	{
+		if( m_selected_palette == nullptr )
+			return;
+
+		for( auto& color : m_selected_palette->m_colors )
+			color.m_count = 0;
 	}
 
 	void PalettesManager::_load_palettes()
