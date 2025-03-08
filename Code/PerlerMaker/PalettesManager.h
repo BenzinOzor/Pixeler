@@ -4,6 +4,8 @@
 
 #include <FZN/UI/ImGui.h>
 
+#include "Defines.h"
+
 
 namespace tinyxml2
 {
@@ -17,31 +19,6 @@ namespace PerlerMaker
 
 	class PalettesManager
 	{
-		struct ColorInfos
-		{
-			static constexpr int Invalid_ID{ -1 };
-
-			bool				is_valid( bool _test_color_only = false ) const;
-			std::string			get_full_name() const;		// "id - name"
-
-			std::string			m_name{};					// can be empty
-			int					m_id{ Invalid_ID };			// can be invalid
-			ImColor				m_color{ -1, -1, -1, -1 };
-			bool				m_selected{ true };
-			int					m_count{ -1 };				// if -1, convertion hasn't been done yet
-		};
-		using ColorInfosVector = std::vector< ColorInfos >;
-		using ColorPreset = std::vector< int >;
-
-		struct ColorPalette
-		{
-			std::string m_name{};
-			std::string m_file_path{};
-			ColorInfosVector m_colors;
-			std::unordered_map< std::string, ColorPreset > m_presets;	// for each preset name, a list of selected colors (by index in the vector).
-		};
-		using ColorPalettes = std::unordered_map< std::string, ColorPalette >;
-
 	public:
 		PalettesManager();
 
@@ -51,7 +28,7 @@ namespace PerlerMaker
 		// Convert the given color to a new one according to the selected palette
 		// If no palette is selected, the given color will be returned
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Color convert_color( const sf::Color& _color ) const;
+		std::pair< sf::Color, const ColorInfos* > convert_color( const sf::Color& _color ) const;
 
 		void reset_base_palettes();
 		void reset_color_counts();

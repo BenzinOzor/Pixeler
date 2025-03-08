@@ -151,49 +151,6 @@ namespace PerlerMaker
 		ImGui::EndChild();
 	}
 
-	void bicolor_color_name( std::string_view _color, bool _bold, bool _used )
-	{
-		auto first_number_pos{ _color.find_first_not_of( '0' ) };
-
-		const ImGuiStyle style{ ImGui::GetStyle() };
-
-		const bool grayed_out{ _used == false && _bold == false };
-
-		const ImColor leading_zeros_color{ grayed_out ? ImGui_fzn::color::dark_gray : ImGui_fzn::color::gray };
-		const ImColor id_name_color{ grayed_out ? ImGui_fzn::color::gray : style.Colors[ ImGuiCol_Text ] };
-
-		if( first_number_pos == std::string::npos )
-		{
-			if( _bold )
-				ImGui_fzn::bold_text_colored( id_name_color, _color );
-			else
-				ImGui::TextColored( id_name_color, _color.data() );
-
-			return;
-		}
-
-		auto leading_zeros = std::string{ _color.substr( 0, first_number_pos ) };
-		auto number = std::string{ _color.substr( first_number_pos ) };
-
-		auto spacing_backup{ ImGui::GetStyle().ItemSpacing.x };
-		ImGui::GetStyle().ItemSpacing.x = 0.f;
-
-		if( _bold )
-		{
-			ImGui_fzn::bold_text_colored( leading_zeros_color, leading_zeros );
-			ImGui::SameLine();
-			ImGui_fzn::bold_text_colored( id_name_color, number );
-		}
-		else
-		{
-			ImGui::TextColored( leading_zeros_color, leading_zeros.c_str() );
-			ImGui::SameLine();
-			ImGui::TextColored( id_name_color, number.c_str() );
-		}
-
-		ImGui::GetStyle().ItemSpacing.x = spacing_backup;
-	}
-
 	void PalettesManager::_selectable_color_info( ColorInfos& _color )
 	{
 		if( match_filter( _color ) == false || m_only_used_colors_display && _color.m_count == 0 )
@@ -263,16 +220,11 @@ namespace PerlerMaker
 		if( ImGui::IsItemHovered() )
 		{
 			ImGui::BeginTooltip();
-			bicolor_color_name( color_name, true, _color.m_count != 0 );
+			auto style = ImGui::GetStyle();
+			Utils::color_infos_tooltip_common( _color );
+
 			ImGui::Separator();
-
-			ImGuiContext& g = *GImGui;
-
-			ImVec2 sz( ImGui_fzn::s_ImGuiFormatOptions.m_pFontRegular->FontSize * 2 + g.Style.FramePadding.y * 2, ImGui_fzn::s_ImGuiFormatOptions.m_pFontRegular->FontSize * 2 + g.Style.FramePadding.y * 2 );
-			sf::Color sf_color{ Utils::to_sf_color( _color.m_color ) };
-			ImGui::ColorButton( "##preview", _color.m_color, ImGuiColorEditFlags_NoTooltip, sz );
-			ImGui::SameLine();
-			ImGui::Text( "#%02X%02X%02X\nR:%d, G:%d, B:%d", sf_color.r, sf_color.g, sf_color.b, sf_color.r, sf_color.g, sf_color.b );
+			ImGui::Text( "Total count: %d", _color.m_count );
 
 			ImGui::EndTooltip();
 		}
@@ -290,11 +242,11 @@ namespace PerlerMaker
 			ImGui::SameLine();
 			ImGui::SetNextItemAllowOverlap();
 			ImGui::SetCursorPos( test_cursor_pos );
-			bicolor_color_name( color_name, true, _color.m_count != 0 );
+			Utils::bicolor_color_name( color_name, true, _color.m_count != 0 );
 
 		}
 		else
-			bicolor_color_name( color_name.c_str(), false, _color.m_count != 0 );
+			Utils::bicolor_color_name( color_name.c_str(), false, _color.m_count != 0 );
 	}
 
 	void PalettesManager::_edit_color()

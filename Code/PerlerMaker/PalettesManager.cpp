@@ -9,39 +9,10 @@
 
 #include "PalettesManager.h"
 #include "Utils.h"
-#include "Defines.h"
 
 
 namespace PerlerMaker
 {
-	bool PalettesManager::ColorInfos::is_valid( bool _test_color_only /*= false*/ ) const
-	{
-		if( m_color.Value.w < 0.f || m_color.Value.x < 0.f || m_color.Value.y < 0.f || m_color.Value.z < 0.f )
-			return false;
-
-		if( _test_color_only )
-			return true;
-
-		if( m_id <= Invalid_ID && m_name.empty() )
-			return false;
-
-
-		return true;
-	}
-
-	std::string PalettesManager::ColorInfos::get_full_name() const
-	{
-		auto color_name = std::string{};
-
-		if( m_id >= 0 )
-			color_name = fzn::Tools::Sprintf( "%03d", m_id );
-
-		if( m_name.empty() == false )
-			color_name.append( fzn::Tools::Sprintf( "%s%s", color_name.size() > 0 ? " - " : "", m_name.c_str() ) );
-
-		return color_name;
-	}
-
 	PalettesManager::PalettesManager():
 		m_fzn_palettes_path( g_pFZN_Core->GetDataPath( "XMLFiles/Palettes" ) ),
 		m_app_palettes_path( g_pFZN_Core->GetSaveFolderPath() + "/Palettes" )
@@ -77,7 +48,7 @@ namespace PerlerMaker
 	// Convert the given color to a new one according to the selected palette
 	// If no palette is selected, the given color will be returned
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	sf::Color PalettesManager::convert_color( const sf::Color& _color ) const
+	std::pair< sf::Color, const ColorInfos* > PalettesManager::convert_color( const sf::Color& _color ) const
 	{
 		auto get_distance = []( const ImColor& _color_a, const ImColor& _color_b )
 		{
@@ -85,7 +56,7 @@ namespace PerlerMaker
 		};
 		
 		if( m_selected_palette == nullptr )
-			return _color;
+			return { _color, nullptr };
 		
 		ImColor converted_color{ _color };
 		ColorInfos* smallest_distance_color{ nullptr };
@@ -108,10 +79,10 @@ namespace PerlerMaker
 		if( smallest_distance_color != nullptr )
 		{
 			++smallest_distance_color->m_count;
-			return Utils::to_sf_color( smallest_distance_color->m_color );
+			return { Utils::to_sf_color( smallest_distance_color->m_color ), smallest_distance_color };
 		}
 
-		return _color;
+		return { _color, nullptr };
 	}
 
 	void PalettesManager::reset_base_palettes()
