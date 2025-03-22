@@ -20,12 +20,24 @@ namespace PerlerMaker
 			sf::Color m_base_color{ sf::Color::Black };
 			const ColorInfos* m_color_infos{ nullptr };
 			uint32_t m_quad_index{ Uint32_Max };
+			uint32_t m_pixel_index{ Uint32_Max };
 		};
 		using PixelDescs = std::vector< PixelDesc >;
 		using PixelDescsPtr = std::vector< PixelDesc* >;
 
 		struct PixelArea
 		{
+			PixelArea()
+			{
+				m_outline_points.setPrimitiveType( sf::Lines );
+			}
+
+			void Reset()
+			{
+				m_outline_points.clear();
+				m_pixels.clear();
+			}
+
 			sf::VertexArray m_outline_points;
 			PixelDescsPtr	m_pixels;
 		};
@@ -71,6 +83,7 @@ namespace PerlerMaker
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		uint32_t get_pixel_index( uint32_t _quad_index );
 		PixelDesc* get_pixel_desc( uint32_t _quad_index );
+		PixelDesc* _get_pixel_desc_in_direction( const PixelDesc& _pixel, Direction _direction );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// Get the local position of the mouse on the canvas.
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -84,6 +97,7 @@ namespace PerlerMaker
 		// Get the infos of the area the mouse is hovering. All the pixels in the area + a vertex array of the points surrounding it.
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		PixelArea _get_pixel_area( uint32_t _quad_index );
+		void _compute_area_outline();
 
 		///////////////// IMGUI /////////////////
 		void _display_canvas( const sf::Color& _bg_color );

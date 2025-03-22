@@ -1,4 +1,5 @@
 //#include <SFML/Graphics.hpp>
+#include <array>
 
 #include <FZN/Managers/DataManager.h>
 #include <FZN/Managers/WindowManager.h>
@@ -113,7 +114,7 @@ namespace PerlerMaker
 		{
 			const sf::Color pixel_color{ color_values[ ColorChannel::red ], color_values[ ColorChannel::green ], color_values[ ColorChannel::blue ], color_values[ ColorChannel::alpha ] };
 
-			m_pixels_descs.push_back( { pixel_color } );
+			m_pixels_descs.push_back( { .m_base_color = pixel_color, .m_pixel_index = m_pixels_descs.size() } );
 
 			if( pixel_color.a < 50 )
 				continue;
@@ -259,12 +260,55 @@ namespace PerlerMaker
 		return nullptr;
 	}
 
+	CanvasManager::PixelDesc* CanvasManager::_get_pixel_desc_in_direction( const PixelDesc& _pixel, Direction _direction )
+	{
+		const PixelPosition pixel_position{ _get_2D_position( _pixel.m_pixel_index ) };
+
+		uint32_t new_pixel_index{ 0u };
+
+		switch( _direction )
+		{
+			case PerlerMaker::Direction::up:
+			{
+				new_pixel_index = _get_1D_index( { pixel_position.x, pixel_position.y - 1 } );
+				break;
+			}
+			case PerlerMaker::Direction::down:
+			{
+				new_pixel_index = _get_1D_index( { pixel_position.x, pixel_position.y + 1 } );
+				break;
+			}
+			case PerlerMaker::Direction::left:
+			{
+				new_pixel_index = _get_1D_index( { pixel_position.x - 1, pixel_position.y } );
+				break;
+			}
+			case PerlerMaker::Direction::right:
+			{
+				new_pixel_index = _get_1D_index( { pixel_position.x + 1, pixel_position.y } );
+				break;
+			}
+			default:
+				return nullptr;
+		}
+
+		if( new_pixel_index >= m_pixels_descs.size() )
+			return nullptr;
+
+		PixelDesc& pixel_desc{ m_pixels_descs[ new_pixel_index ] };
+
+		if( pixel_desc.m_color_infos == nullptr || pixel_desc.m_color_infos->is_valid() == false )
+			return nullptr;
+
+		return &pixel_desc;
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Get the local position of the mouse on the canvas.
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	ImVec2 CanvasManager::_get_mouse_pos() const
 	{
-		// GetCurrentWindow crashes for some odd reason ? (loosing context) so calculating TitleBarHeight by myself.
+		// GetCurrentWindow crashes for some odd reason ? (loosing context) so calculating TitleBarHeight myself.
 		const float titlebar_height{ ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f };
 
 		ImVec2 mouse_pos{ ImGui::GetMousePos() - m_sprite.getPosition() };
@@ -283,6 +327,9 @@ namespace PerlerMaker
 
 	uint32_t CanvasManager::_get_1D_index( const PixelPosition& _pixel_position ) const
 	{
+		if( _pixel_position.x >= m_image_size.x || _pixel_position.y >= m_image_size.y )
+			return Uint32_Max;
+
 		const uint32_t image_width{ static_cast<uint32_t>( m_image_size.x ) };
 
 		// y * width + x
@@ -346,6 +393,75 @@ namespace PerlerMaker
 		return pixel_area;
 	}
 
+	void CanvasManager::_compute_area_outline()
+	{
+		if( m_last_detected_area.m_pixels.empty() )
+			return;
+
+		m_last_detected_area.m_outline_points.clear();
+
+		const float titlebar_height{ ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f };
+
+		auto add_neighbor_points = [&]( const PixelDesc& _pixel, Direction _direction )
+		{
+			PixelDesc* neighbor_pixel{ _get_pixel_desc_in_direction( _pixel, _direction ) };
+			if( neighbor_pixel == nullptr || *_pixel.m_color_infos != *neighbor_pixel->m_color_infos )
+			{
+				const PixelPosition pixel_position{ _get_2D_position( _pixel.m_pixel_index ) };
+				sf::Vector2f point_A{ m_sprite.getPosition() + m_image_offest };
+				point_A.x += pixel_position.x * m_zoom_level;
+				point_A.y += pixel_position.y * m_zoom_level - titlebar_height;
+
+				sf::Vector2f point_B{ point_A };
+
+				switch( _direction )
+				{
+					case PerlerMaker::Direction::up:
+					{
+						point_B.x += m_zoom_level;
+						break;
+					}
+					case PerlerMaker::Direction::down:
+					{
+						point_A.y += m_zoom_level;
+						point_B.x += m_zoom_level;
+						point_B.y += m_zoom_level;
+						break;
+					}
+					case PerlerMaker::Direction::left:
+					{
+						point_B.y += m_zoom_level;
+						break;
+					}
+					case PerlerMaker::Direction::right:
+					{
+						point_A.x += m_zoom_level;
+						point_B.x += m_zoom_level;
+						point_B.y += m_zoom_level;
+						break;
+					}
+					default:
+						break;
+				}
+
+
+				m_last_detected_area.m_outline_points.append( { point_A, sf::Color::Red } );
+				m_last_detected_area.m_outline_points.append( { point_B, sf::Color::Red } );
+			}
+		};
+
+		for( const PixelDesc* pixel_desc : m_last_detected_area.m_pixels )
+		{
+			if( pixel_desc == nullptr )
+				continue;
+
+			add_neighbor_points( *pixel_desc, Direction::up );
+			add_neighbor_points( *pixel_desc, Direction::down );
+			add_neighbor_points( *pixel_desc, Direction::left );
+			add_neighbor_points( *pixel_desc, Direction::right );
+		}
+	}
+
 	///////////////// IMGUI /////////////////
 
 	void CanvasManager::_display_canvas( const sf::Color& _bg_color )
@@ -355,8 +471,11 @@ namespace PerlerMaker
 		m_sprite.setPosition( ImGui::GetWindowPos() /*+ sf::Vector2f{ 0.f, 1000.f }*/ );
 		m_render_texture.clear( _bg_color );
 		m_render_texture.draw( m_converted_pixels );
-		m_render_texture.display();
 
+		if( m_last_detected_area.m_outline_points.getVertexCount() > 0 )
+			m_render_texture.draw( m_last_detected_area.m_outline_points );
+
+		m_render_texture.display();
 		ImGui::Image( m_sprite );
 
 		if( ImGui::IsItemHovered() )
@@ -368,22 +487,35 @@ namespace PerlerMaker
 	void CanvasManager::_mouse_detection()
 	{
 		if( m_converted_pixels.getVertexCount() <= 0 )
+		{
+			m_last_detected_area.Reset();
 			return;
+		}
 
 		const PixelPosition mouse_pixel_pos{ _get_mouse_pixel_pos() };
 		const uint32_t pixel_index{ _get_1D_index( mouse_pixel_pos ) };
 
 		if( pixel_index >= m_pixels_descs.size() )
+		{
+			m_last_detected_area.Reset();
 			return;
+		}
 
 		const ColorInfos* color{ m_pixels_descs[ pixel_index ].m_color_infos };
 
 		if( color == nullptr )
+		{
+			m_last_detected_area.Reset();
 			return;
+		}
 
 		if( pixel_index != m_last_hovered_pixel_index )
 		{
 			m_last_detected_area = std::move( _get_pixel_area( pixel_index ) );
+
+			if( m_last_detected_area.m_pixels.empty() == false )
+				_compute_area_outline();
+
 			m_last_hovered_pixel_index = pixel_index;
 		}
 

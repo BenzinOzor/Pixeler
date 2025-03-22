@@ -16,6 +16,15 @@ namespace PerlerMaker
 		COUNT
 	};
 
+	enum class Direction
+	{
+		up,
+		down,
+		left,
+		right,
+		COUNT
+	};
+
 	static constexpr ImVec2 DefaultButtonSize{ 150.f, 0.f };
 
 	inline constexpr float		Flt_Max{ std::numeric_limits<float>::max() };
@@ -55,7 +64,6 @@ namespace PerlerMaker
 
 			if( m_id <= Invalid_ID && m_name.empty() )
 				return false;
-
 
 			return true;
 		}
