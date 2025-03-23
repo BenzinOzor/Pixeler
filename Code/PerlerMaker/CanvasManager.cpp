@@ -460,6 +460,8 @@ namespace PerlerMaker
 			add_neighbor_points( *pixel_desc, Direction::left );
 			add_neighbor_points( *pixel_desc, Direction::right );
 		}
+
+		m_last_detected_area.m_line.from_vertex_array( m_last_detected_area.m_outline_points );
 	}
 
 	///////////////// IMGUI /////////////////
@@ -473,7 +475,7 @@ namespace PerlerMaker
 		m_render_texture.draw( m_converted_pixels );
 
 		if( m_last_detected_area.m_outline_points.getVertexCount() > 0 )
-			m_render_texture.draw( m_last_detected_area.m_outline_points );
+			m_render_texture.draw( m_last_detected_area.m_line );
 
 		m_render_texture.display();
 		ImGui::Image( m_sprite );
@@ -508,6 +510,9 @@ namespace PerlerMaker
 			m_last_detected_area.Reset();
 			return;
 		}
+
+		if( ImGui::IsMouseClicked( ImGuiMouseButton_Right ) == false )
+			return;
 
 		if( pixel_index != m_last_hovered_pixel_index )
 		{

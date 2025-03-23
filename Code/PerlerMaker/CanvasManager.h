@@ -2,6 +2,8 @@
 
 #include <SFML/Graphics/VertexArray.hpp>
 
+#include <FZN/Display/Line.h>
+
 #include "Defines.h"
 
 
@@ -36,9 +38,11 @@ namespace PerlerMaker
 			{
 				m_outline_points.clear();
 				m_pixels.clear();
+				m_line.clear();
 			}
 
 			sf::VertexArray m_outline_points;
+			fzn::Line		m_line;
 			PixelDescsPtr	m_pixels;
 		};
 
