@@ -100,7 +100,7 @@ namespace PerlerMaker
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// Get the infos of the area the mouse is hovering. All the pixels in the area + a vertex array of the points surrounding it.
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		PixelArea _get_pixel_area( uint32_t _quad_index );
+		void _compute_pixel_area( uint32_t _quad_index );
 		void _compute_area_outline();
 
 		///////////////// IMGUI /////////////////

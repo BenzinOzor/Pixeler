@@ -29,6 +29,9 @@ namespace PerlerMaker
 		m_offsets[ 1 ] = { m_zoom_level,	0.f };				// top right
 		m_offsets[ 2 ] = { m_zoom_level,	m_zoom_level };		// bottom right
 		m_offsets[ 3 ] = { 0.f,				m_zoom_level };		// bottom left
+
+		m_last_detected_area.m_line.set_thickness( 1.f );
+		m_last_detected_area.m_line.set_color( sf::Color::Red );
 	}
 
 	CanvasManager::~CanvasManager()
@@ -348,16 +351,16 @@ namespace PerlerMaker
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Get the infos of the area the mouse is hovering. All the pixels in the area + a vertex array of the points surrounding it.
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	CanvasManager::PixelArea CanvasManager::_get_pixel_area( uint32_t _pixel_index )
+	void CanvasManager::_compute_pixel_area( uint32_t _pixel_index )
 	{
 		if( _pixel_index >= m_pixels_descs.size() )
-			return {};
+			return;
 
 		if( m_pixels_descs[ _pixel_index ].m_color_infos.is_valid() == false )
-			return {};
+			return;
 
 		std::vector< uint32_t > treated_indexes;
-		PixelArea pixel_area{};
+		m_last_detected_area.m_pixels.clear();
 		const ColorInfos& color_to_find{ m_pixels_descs[ _pixel_index ].m_color_infos };
 
 		auto check_position = [&]( this const auto& self, uint32_t _pixel_index )
@@ -376,7 +379,7 @@ namespace PerlerMaker
 			treated_indexes.push_back( _pixel_index );
 
 			if( pixel_desc.m_color_infos == color_to_find )
-				pixel_area.m_pixels.push_back( &pixel_desc );
+				m_last_detected_area.m_pixels.push_back( &pixel_desc );
 			else
 				return;
 
@@ -390,7 +393,7 @@ namespace PerlerMaker
 
 		check_position( _pixel_index );
 
-		return pixel_area;
+		return;
 	}
 
 	void CanvasManager::_compute_area_outline()
@@ -516,7 +519,7 @@ namespace PerlerMaker
 
 		if( pixel_index != m_last_hovered_pixel_index )
 		{
-			m_last_detected_area = std::move( _get_pixel_area( pixel_index ) );
+			_compute_pixel_area( pixel_index );
 
 			if( m_last_detected_area.m_pixels.empty() == false )
 				_compute_area_outline();
