@@ -30,8 +30,8 @@ namespace PerlerMaker
 		m_offsets[ 2 ] = { m_zoom_level,	m_zoom_level };		// bottom right
 		m_offsets[ 3 ] = { 0.f,				m_zoom_level };		// bottom left
 
-		m_last_detected_area.m_line.set_thickness( 1.f );
-		m_last_detected_area.m_line.set_color( sf::Color::Red );
+		m_hovered_area.m_line.set_thickness( 1.f );
+		m_hovered_area.m_line.set_color( sf::Color::Red );
 	}
 
 	CanvasManager::~CanvasManager()
@@ -52,8 +52,8 @@ namespace PerlerMaker
 
 	void CanvasManager::update()
 	{
-		auto& options{ g_perler_maker->get_options() };
-		auto& canvas_bg_color{ options.get_canvas_background_color() };
+		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		auto& canvas_bg_color{ options_datas.m_canvas_background_color };
 		ImGui::PushStyleColor( ImGuiCol_ChildBg, canvas_bg_color );
 		ImGui::PushStyleColor( ImGuiCol_WindowBg, canvas_bg_color );
 		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0, 0 } );
@@ -360,7 +360,7 @@ namespace PerlerMaker
 			return;
 
 		std::vector< uint32_t > treated_indexes;
-		m_last_detected_area.m_pixels.clear();
+		m_hovered_area.m_pixels.clear();
 		const ColorInfos& color_to_find{ m_pixels_descs[ _pixel_index ].m_color_infos };
 
 		auto check_position = [&]( this const auto& self, uint32_t _pixel_index )
@@ -379,7 +379,7 @@ namespace PerlerMaker
 			treated_indexes.push_back( _pixel_index );
 
 			if( pixel_desc.m_color_infos == color_to_find )
-				m_last_detected_area.m_pixels.push_back( &pixel_desc );
+				m_hovered_area.m_pixels.push_back( &pixel_desc );
 			else
 				return;
 
@@ -398,10 +398,11 @@ namespace PerlerMaker
 
 	void CanvasManager::_compute_area_outline()
 	{
-		if( m_last_detected_area.m_pixels.empty() )
+		if( m_hovered_area.m_pixels.empty() )
 			return;
 
-		m_last_detected_area.m_outline_points.clear();
+		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		m_hovered_area.m_outline_points.clear();
 
 		const float titlebar_height{ ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f };
 
@@ -448,12 +449,12 @@ namespace PerlerMaker
 				}
 
 
-				m_last_detected_area.m_outline_points.append( { point_A, sf::Color::Red } );
-				m_last_detected_area.m_outline_points.append( { point_B, sf::Color::Red } );
+				m_hovered_area.m_outline_points.append( { point_A, options_datas.m_area_highlight_color } );
+				m_hovered_area.m_outline_points.append( { point_B, options_datas.m_area_highlight_color } );
 			}
 		};
 
-		for( const PixelDesc* pixel_desc : m_last_detected_area.m_pixels )
+		for( const PixelDesc* pixel_desc : m_hovered_area.m_pixels )
 		{
 			if( pixel_desc == nullptr )
 				continue;
@@ -464,7 +465,14 @@ namespace PerlerMaker
 			add_neighbor_points( *pixel_desc, Direction::right );
 		}
 
-		m_last_detected_area.m_line.from_vertex_array( m_last_detected_area.m_outline_points );
+		m_hovered_area.m_line.set_thickness( options_datas.m_area_highlight_thickness );
+		m_hovered_area.m_line.set_color( options_datas.m_area_highlight_color );
+		m_hovered_area.m_line.from_vertex_array( m_hovered_area.m_outline_points );
+	}
+
+	bool CanvasManager::_is_pixel_in_current_area( uint32_t _pixel_index ) const
+	{
+		return std::ranges::find( m_hovered_area.m_pixels, _pixel_index, &PixelDesc::m_pixel_index ) != m_hovered_area.m_pixels.end();
 	}
 
 	///////////////// IMGUI /////////////////
@@ -477,8 +485,8 @@ namespace PerlerMaker
 		m_render_texture.clear( _bg_color );
 		m_render_texture.draw( m_converted_pixels );
 
-		if( m_last_detected_area.m_outline_points.getVertexCount() > 0 )
-			m_render_texture.draw( m_last_detected_area.m_line );
+		if( m_hovered_area.m_outline_points.getVertexCount() > 0 )
+			m_render_texture.draw( m_hovered_area.m_line );
 
 		m_render_texture.display();
 		ImGui::Image( m_sprite );
@@ -486,14 +494,17 @@ namespace PerlerMaker
 		if( ImGui::IsItemHovered() )
 			_mouse_detection();
 		else
+		{
 			m_last_hovered_pixel_index = Uint32_Max;
+			m_hovered_area.Reset();
+		}
 	}
 
 	void CanvasManager::_mouse_detection()
 	{
 		if( m_converted_pixels.getVertexCount() <= 0 )
 		{
-			m_last_detected_area.Reset();
+			m_hovered_area.Reset();
 			return;
 		}
 
@@ -502,7 +513,7 @@ namespace PerlerMaker
 
 		if( pixel_index >= m_pixels_descs.size() )
 		{
-			m_last_detected_area.Reset();
+			m_hovered_area.Reset();
 			return;
 		}
 
@@ -510,19 +521,19 @@ namespace PerlerMaker
 
 		if( color.is_valid() == false )
 		{
-			m_last_detected_area.Reset();
+			m_hovered_area.Reset();
 			return;
 		}
 
-		if( ImGui::IsMouseClicked( ImGuiMouseButton_Right ) == false )
-			return;
-
 		if( pixel_index != m_last_hovered_pixel_index )
 		{
-			_compute_pixel_area( pixel_index );
+			if( _is_pixel_in_current_area( pixel_index ) == false )
+			{
+				_compute_pixel_area( pixel_index );
 
-			if( m_last_detected_area.m_pixels.empty() == false )
-				_compute_area_outline();
+				if( m_hovered_area.m_pixels.empty() == false )
+					_compute_area_outline();
+			}
 
 			m_last_hovered_pixel_index = pixel_index;
 		}
@@ -536,7 +547,7 @@ namespace PerlerMaker
 		ImGui::Separator();
 		ImGui::Text( "Area count:" );
 		ImGui::SameLine();
-		ImGui_fzn::bold_text( "%d", m_last_detected_area.m_pixels.size() );
+		ImGui_fzn::bold_text( "%d", m_hovered_area.m_pixels.size() );
 
 		ImGui::Text( "Total count:" );
 		ImGui::SameLine();

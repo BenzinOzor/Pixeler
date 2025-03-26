@@ -102,6 +102,7 @@ namespace PerlerMaker
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void _compute_pixel_area( uint32_t _quad_index );
 		void _compute_area_outline();
+		bool _is_pixel_in_current_area( uint32_t _pixel_index ) const;
 
 		///////////////// IMGUI /////////////////
 		void _display_canvas( const sf::Color& _bg_color );
@@ -123,6 +124,6 @@ namespace PerlerMaker
 		sf::Vector2f					m_image_offest{};
 
 		uint32_t						m_last_hovered_pixel_index{ Uint32_Max };
-		PixelArea						m_last_detected_area;
+		PixelArea						m_hovered_area;
 	};
 } // namespace PerlerMaker

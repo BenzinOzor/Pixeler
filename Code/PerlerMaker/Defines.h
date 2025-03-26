@@ -25,7 +25,7 @@ namespace PerlerMaker
 		COUNT
 	};
 
-	static constexpr ImVec2 DefaultButtonSize{ 150.f, 0.f };
+	static constexpr ImVec2 DefaultWidgetSize{ 150.f, 0.f };
 
 	inline constexpr float		Flt_Max{ std::numeric_limits<float>::max() };
 	inline constexpr uint32_t	Uint32_Max{ std::numeric_limits<uint32_t>::max() };
