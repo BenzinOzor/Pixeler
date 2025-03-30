@@ -22,6 +22,12 @@ namespace PerlerMaker
 		m_render_texture.create( window_size.x, window_size.y );
 		m_sprite.setTexture( m_render_texture.getTexture() );
 
+		m_test_texture.create( window_size.x, window_size.y );
+		m_test_image_sprite.setTexture( m_test_texture.getTexture() );
+
+		m_grid_texture.create( window_size.x, window_size.y );
+		m_grid_sprite.setTexture( m_grid_texture.getTexture() );
+
 		m_base_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
 		m_converted_pixels.setPrimitiveType( sf::PrimitiveType::Quads );
 
@@ -32,6 +38,9 @@ namespace PerlerMaker
 
 		m_hovered_area.m_line.set_thickness( 1.f );
 		m_hovered_area.m_line.set_color( sf::Color::Red );
+
+		m_pixel_grid.setPrimitiveType( sf::Lines );
+		m_grid_shader = g_pFZN_DataMgr->GetShader( "grid_shader" );
 	}
 
 	CanvasManager::~CanvasManager()
@@ -47,6 +56,8 @@ namespace PerlerMaker
 		{
 			FZN_LOG( "new window size %d %d", window_event.size.width, window_event.size.height );
 			m_render_texture.create( window_event.size.width, window_event.size.height );
+			m_grid_texture.create( window_event.size.width, window_event.size.height );
+			m_test_texture.create( window_event.size.width, window_event.size.height );
 		}
 	}
 
@@ -201,6 +212,8 @@ namespace PerlerMaker
 			_set_quad_pos_and_zoom( m_base_pixels, quad_index, m_zoom_level, _pos );
 			_set_quad_pos_and_zoom( m_converted_pixels, quad_index, m_zoom_level, _pos );
 		}
+
+		_update_pixel_grid();
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -215,6 +228,37 @@ namespace PerlerMaker
 		}
 
 		m_zoom_level = _new_pixel_size;
+
+		_update_pixel_grid();
+	}
+
+	void CanvasManager::_update_pixel_grid()
+	{
+		if( m_zoom_level <= 1.f )
+			return;
+
+		m_pixel_grid.clear();
+
+		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		auto& canvas_bg_color{ sf::Color::Green };
+		float grid_position = m_image_offest.x + m_zoom_level;
+
+		while( grid_position < m_canvas_size.x )
+		{
+			m_pixel_grid.append( { { grid_position, 0.f }, canvas_bg_color } );
+			m_pixel_grid.append( { { grid_position, m_canvas_size.y + 0.f }, canvas_bg_color } );
+
+			grid_position += m_zoom_level;
+		}
+
+		grid_position = m_image_offest.y + m_zoom_level;
+		while( grid_position < m_canvas_size.y )
+		{
+			m_pixel_grid.append( { { 0.f, grid_position }, canvas_bg_color } );
+			m_pixel_grid.append( { { m_canvas_size.x + 0.f, grid_position }, canvas_bg_color } );
+
+			grid_position += m_zoom_level;
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -448,7 +492,6 @@ namespace PerlerMaker
 						break;
 				}
 
-
 				m_hovered_area.m_outline_points.append( { point_A, options_datas.m_area_highlight_color } );
 				m_hovered_area.m_outline_points.append( { point_B, options_datas.m_area_highlight_color } );
 			}
@@ -481,9 +524,42 @@ namespace PerlerMaker
 	{
 		auto sprite_size{ m_canvas_size };
 		m_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
+		m_grid_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
+		m_test_image_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );	// Needed when resizing.
 		m_sprite.setPosition( ImGui::GetWindowPos() /*+ sf::Vector2f{ 0.f, 1000.f }*/ );
-		m_render_texture.clear( _bg_color );
-		m_render_texture.draw( m_converted_pixels );
+		m_render_texture.clear( sf::Color::Transparent );
+
+		m_test_texture.clear( sf::Color::Transparent );
+		m_test_texture.draw( m_converted_pixels );
+		m_test_texture.display();
+		m_render_texture.draw( m_test_image_sprite );
+
+		if( m_converted_pixels.getVertexCount() > 0 )
+		{
+			m_grid_texture.clear( sf::Color::Transparent );
+
+			auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+
+			m_grid_texture.draw( m_pixel_grid );
+			m_grid_texture.display();
+
+			if( options_datas.m_grid_same_color_as_canvas == false )
+			{
+				m_grid_shader->setUniform( "sprite_texture", *m_test_image_sprite.getTexture() );
+				m_grid_shader->setUniform( "grid_texture", sf::Shader::CurrentTexture );
+				m_grid_shader->setUniform( "texture_width", (float)m_test_texture.getSize().x );
+				m_grid_shader->setUniform( "texture_height", (float)m_test_texture.getSize().y );
+				m_grid_shader->setUniform( "grid_color", sf::Glsl::Vec4( options_datas.m_grid_color ) );
+			}
+			else
+			{
+				m_grid_shader->setUniform( "texture_width", 0.f );
+				m_grid_shader->setUniform( "grid_color", sf::Glsl::Vec4( options_datas.m_canvas_background_color ) );
+			}
+
+			m_grid_shader->setUniform( "grid_texture", sf::Shader::CurrentTexture );
+			m_render_texture.draw( m_grid_sprite, m_grid_shader );
+		}
 
 		if( m_hovered_area.m_outline_points.getVertexCount() > 0 )
 			m_render_texture.draw( m_hovered_area.m_line );

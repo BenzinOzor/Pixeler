@@ -1,9 +1,14 @@
-<Resources path="../../Data/">
+<Resources Path="../../Data/">
 
-	<Folder path="Display/">
+	<Folder Path="Display/">
+
+		<!--//////////////// SHADERS ////////////////-->
+		<Folder Path="../Shaders/">
+			<Shader Name="grid_shader"				Path="grid_shader"							 />
+		</Folder>
 	</Folder>
 
-	<Folder path="Audio/">
+	<Folder Path="Audio/">
 	</Folder>
 
 </Resources>

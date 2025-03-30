@@ -74,6 +74,7 @@ namespace PerlerMaker
 		// Update the pixels to a new zoom level
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void _update_zoom_level( float _new_zoom_level );
+		void _update_pixel_grid();
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// Convert the base pixels to new colors according to the currently selected palette
@@ -111,6 +112,10 @@ namespace PerlerMaker
 
 		sf::RenderTexture				m_render_texture;
 		sf::Sprite						m_default_image_sprite;
+
+		sf::RenderTexture				m_test_texture;
+		sf::Sprite						m_test_image_sprite;
+
 		sf::Sprite						m_sprite;
 		sf::VertexArray					m_base_pixels;			// pixels created from the base image with its colors
 		sf::VertexArray					m_converted_pixels;		// pixels converted from the base ones using a given palette
@@ -125,5 +130,10 @@ namespace PerlerMaker
 
 		uint32_t						m_last_hovered_pixel_index{ Uint32_Max };
 		PixelArea						m_hovered_area;
+
+		sf::RenderTexture				m_grid_texture;
+		sf::Sprite						m_grid_sprite;
+		sf::VertexArray					m_pixel_grid;
+		sf::Shader*						m_grid_shader{ nullptr };
 	};
 } // namespace PerlerMaker
