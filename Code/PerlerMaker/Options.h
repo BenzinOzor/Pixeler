@@ -16,10 +16,13 @@ namespace PerlerMaker
 			ImVec4 m_area_highlight_color{ ImGui_fzn::color::bright_red };
 			float m_area_highlight_thickness{ 1.f };
 			bool m_grid_same_color_as_canvas{ true };
+
+			bool m_show_grid{ true };
 		};
 
 		Options();
 
+		void menu_bar_options();
 		void show_window();
 		void update();
 

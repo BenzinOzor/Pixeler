@@ -111,6 +111,8 @@ namespace PerlerMaker
 
 			if( ImGui::BeginMenu( "Tools" ) )
 			{
+				m_options.menu_bar_options();
+				ImGui::Separator();
 				if( ImGui::MenuItem( "Options" ) )
 					m_options.show_window();
 

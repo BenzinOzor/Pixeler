@@ -540,25 +540,28 @@ namespace PerlerMaker
 
 			auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
 
-			m_grid_texture.draw( m_pixel_grid );
-			m_grid_texture.display();
-
-			if( options_datas.m_grid_same_color_as_canvas == false )
+			if( options_datas.m_show_grid )
 			{
-				m_grid_shader->setUniform( "sprite_texture", *m_test_image_sprite.getTexture() );
+				m_grid_texture.draw( m_pixel_grid );
+				m_grid_texture.display();
+
+				if( options_datas.m_grid_same_color_as_canvas == false )
+				{
+					m_grid_shader->setUniform( "sprite_texture", *m_test_image_sprite.getTexture() );
+					m_grid_shader->setUniform( "grid_texture", sf::Shader::CurrentTexture );
+					m_grid_shader->setUniform( "texture_width", (float)m_test_texture.getSize().x );
+					m_grid_shader->setUniform( "texture_height", (float)m_test_texture.getSize().y );
+					m_grid_shader->setUniform( "grid_color", sf::Glsl::Vec4( options_datas.m_grid_color ) );
+				}
+				else
+				{
+					m_grid_shader->setUniform( "texture_width", 0.f );
+					m_grid_shader->setUniform( "grid_color", sf::Glsl::Vec4( options_datas.m_canvas_background_color ) );
+				}
+
 				m_grid_shader->setUniform( "grid_texture", sf::Shader::CurrentTexture );
-				m_grid_shader->setUniform( "texture_width", (float)m_test_texture.getSize().x );
-				m_grid_shader->setUniform( "texture_height", (float)m_test_texture.getSize().y );
-				m_grid_shader->setUniform( "grid_color", sf::Glsl::Vec4( options_datas.m_grid_color ) );
+				m_render_texture.draw( m_grid_sprite, m_grid_shader );
 			}
-			else
-			{
-				m_grid_shader->setUniform( "texture_width", 0.f );
-				m_grid_shader->setUniform( "grid_color", sf::Glsl::Vec4( options_datas.m_canvas_background_color ) );
-			}
-
-			m_grid_shader->setUniform( "grid_texture", sf::Shader::CurrentTexture );
-			m_render_texture.draw( m_grid_sprite, m_grid_shader );
 		}
 
 		if( m_hovered_area.m_outline_points.getVertexCount() > 0 )
