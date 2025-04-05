@@ -14,7 +14,10 @@
 
 int main()
 {
-	fzn::FazonCore::CreateInstance( { "PerlerMaker", FZNProjectType::Application } );
+	fzn::FazonCore::ProjectDesc desc{ "Perler Maker", FZNProjectType::Application };
+	fzn::Tools::MaskRaiseFlag( desc.m_uModules, fzn::FazonCore::CoreModuleFlags_InputModule );
+
+	fzn::FazonCore::CreateInstance( desc );
 
 	//Changing the titles of the window and the console
 	g_pFZN_Core->ConsoleTitle( g_pFZN_Core->GetProjectName().c_str() );

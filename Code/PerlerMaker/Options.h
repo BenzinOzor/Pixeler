@@ -18,6 +18,8 @@ namespace PerlerMaker
 			bool m_grid_same_color_as_canvas{ true };
 
 			bool m_show_grid{ true };
+
+			std::vector< fzn::ActionKey > m_bindings;
 		};
 
 		Options();
@@ -26,9 +28,13 @@ namespace PerlerMaker
 		void show_window();
 		void update();
 
+		void on_event();
+
 		const OptionsDatas& get_options_datas() { return m_options_datas; }
 
 	private:
+		void _draw_keybinds( float _column_width );
+
 		void _load_options();
 		void _save_options();
 
@@ -36,6 +42,7 @@ namespace PerlerMaker
 		void _first_column_text( const char* _text );
 
 		bool m_show_window{ false };
+		bool m_show_keybinds{ false };
 
 		OptionsDatas m_options_datas;
 		OptionsDatas m_temp_options_datas;

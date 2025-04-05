@@ -126,7 +126,7 @@ namespace PerlerMaker
 	{
 		if( std::filesystem::exists( m_app_palettes_path ) == false || std::filesystem::is_empty( m_app_palettes_path ) )
 		{
-			std::filesystem::copy( m_fzn_palettes_path, m_app_palettes_path, std::filesystem::copy_options::overwrite_existing );
+			std::filesystem::copy( m_fzn_palettes_path, m_app_palettes_path, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive );
 			FZN_DBLOG( "Palettes folder created, base palettes copied from data to folder." );
 		}
 
@@ -149,6 +149,9 @@ namespace PerlerMaker
 
 			_load_palette( xml_file.FirstChildElement( "color_palette" ), file_root );
 		}
+
+		if( m_palettes.empty() )
+			return;
 
 		m_selected_palette = &m_palettes.begin()->second;
 		m_selected_preset = preset_all;

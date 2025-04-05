@@ -1,4 +1,7 @@
 <Actions>
+	<Action Name="Show Grid">
+		<Input Type="Keyboard" Map="G"/>
+	</Action>
 	<Action Name="ExampleKeyboardBind">
 		 <Input Type="Keyboard" Map="Space"/> 
 		 <Input Type="Keyboard" Map="Return"/> 
