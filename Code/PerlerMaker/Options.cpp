@@ -36,6 +36,9 @@ namespace PerlerMaker
 
 	void Options::update()
 	{
+		if( g_pFZN_InputMgr->IsActionPressed( "Show Grid" ) )
+			m_options_datas.m_show_grid = !m_options_datas.m_show_grid;
+
 		if( m_show_window == false )
 			return;
 
