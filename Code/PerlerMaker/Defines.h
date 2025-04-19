@@ -10,6 +10,10 @@ namespace PerlerMaker
 	static constexpr const char* Action_ShowGrid			{ "Show Grid" };
 	static constexpr const char* Action_ShowOriginalSprite	{ "Show Original Sprite" };
 
+	static constexpr const char* Tooltip_ShowGrid{ "Display a grid over the sprite to visually separate pixels" };
+	static constexpr const char* Tooltip_ShowOriginal{ "Display the original sprite on top of the palette converted one" };
+	static constexpr const char* Tooltip_OriginalOpacity{ "Change the opacity of the original sprite" };
+
 	enum ColorChannel
 	{
 		red,

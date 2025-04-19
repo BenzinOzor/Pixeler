@@ -44,7 +44,7 @@ namespace PerlerMaker
 		void _save_options();
 
 		bool _begin_option_table( float _column_width );
-		void _first_column_text( const char* _text );
+		void _first_column_text( const char* _text, const char* _tooltip = nullptr );
 
 		void _handle_actions();
 

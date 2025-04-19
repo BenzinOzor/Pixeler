@@ -13,7 +13,6 @@
 
 namespace PerlerMaker
 {
-
 	Options::Options()
 	{
 		g_pFZN_Core->AddCallback( this, &Options::on_event, fzn::DataCallbackType::Event );
@@ -24,16 +23,45 @@ namespace PerlerMaker
 	void Options::menu_bar_options()
 	{
 		ImGui::MenuItem( "Show Pixel Grid",			g_pFZN_InputMgr->GetActionKeyString( Action_ShowGrid, true ).c_str(),			&m_options_datas.m_show_grid );
-		ImGui::MenuItem( "Show Original Sprite",	g_pFZN_InputMgr->GetActionKeyString( Action_ShowOriginalSprite, true ).c_str(), &m_options_datas.m_show_original );
+		if( ImGui::IsItemHovered() )
+			ImGui::SetTooltip( Tooltip_ShowGrid );
 	}
 
 	void Options::bottom_bar_options()
 	{
+		ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, { 0.f, 0.f } );
+		ImGui::Checkbox( "##ShowOriginal", &m_options_datas.m_show_original );
+		bool item_hovered = ImGui::IsItemHovered();
+		ImGui::SameLine();
+		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.f, 0.f } );
+		ImGui::Text( "Show Original Sprite (" );
+		item_hovered |= ImGui::IsItemHovered();
+		bool item_clicked = ImGui::IsItemClicked();
+		ImGui::SameLine();
+		ImGui::TextColored( ImGui_fzn::color::gray, g_pFZN_InputMgr->GetActionKeyString( Action_ShowOriginalSprite, true ).c_str() );
+		item_hovered |= ImGui::IsItemHovered();
+		item_clicked |= ImGui::IsItemClicked();
+		ImGui::SameLine();
+		ImGui::Text( ")" );
+		ImGui::PopStyleVar();
+		item_hovered |= ImGui::IsItemHovered();
+		item_clicked |= ImGui::IsItemClicked();
+
+		if( item_hovered )
+			ImGui::SetTooltip( Tooltip_ShowOriginal );
+
+		if( item_clicked )
+			m_options_datas.m_show_original = !m_options_datas.m_show_original;
+
+		ImGui::SameLine();
 		ImGui::SetNextItemWidth( DefaultWidgetSize.x );
-		if( ImGui_fzn::small_slider_float( "Original Sprite Opacity", m_options_datas.m_original_opacity_pct, 0.f, 100.f, "%.0f%%", ImGuiSliderFlags_NoInput | ImGuiSliderFlags_AlwaysClamp ) )
+		if( ImGui_fzn::small_slider_float( "Opacity", m_options_datas.m_original_opacity_pct, 0.f, 100.f, "%.0f%%", ImGuiSliderFlags_NoInput | ImGuiSliderFlags_AlwaysClamp ) )
 		{
 			g_perler_maker->get_canvas_manager().set_original_sprite_opacity( m_options_datas.m_original_opacity_pct );
 		}
+		if( ImGui::IsItemHovered() && ImGui::IsItemActive() == false )
+			ImGui::SetTooltip( Tooltip_OriginalOpacity );
+		ImGui::PopStyleVar();
 	}
 
 	void Options::show_window()
@@ -296,11 +324,15 @@ namespace PerlerMaker
 		return ret;
 	}
 
-	void Options::_first_column_text( const char* _text )
+	void Options::_first_column_text( const char* _text, const char* _tooltip /*= nullptr*/ )
 	{
 		ImGui::TableSetColumnIndex( 0 );
 		ImGui::SameLine( ImGui::GetStyle().IndentSpacing * 0.5f );
 		ImGui::Text( _text );
+
+		if( _tooltip != nullptr && ImGui::IsItemHovered() )
+			ImGui::SetTooltip( _tooltip );
+
 		ImGui::TableSetColumnIndex( 1 );
 	}
 

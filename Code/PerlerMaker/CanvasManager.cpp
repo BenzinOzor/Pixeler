@@ -651,7 +651,7 @@ namespace PerlerMaker
 
 		ImGui::Separator();
 		ImGui::Text( "Original color" );
-		Utils::color_details( m_base_pixels[ m_pixels_descs[ pixel_index ].m_quad_index ].color );
+		Utils::color_details( m_pixels_descs[ pixel_index ].m_base_color );
 
 		ImGui::EndTooltip();
 		ImGui::PopStyleVar();
@@ -692,6 +692,8 @@ namespace PerlerMaker
 			_convert_image_colors();
 		}
 
+		ImGui::SameLine();
+		ImGui::TextColored( ImGui_fzn::color::dark_gray, "|" );
 		ImGui::SameLine();
 		g_perler_maker->get_options().bottom_bar_options();
 	}
