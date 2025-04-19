@@ -11,13 +11,17 @@ namespace PerlerMaker
 	public:
 		struct OptionsDatas
 		{
-			ImVec4 m_canvas_background_color{ ImGui_fzn::color::black };
-			ImVec4 m_grid_color{ ImGui_fzn::color::black };
-			ImVec4 m_area_highlight_color{ ImGui_fzn::color::bright_red };
-			float m_area_highlight_thickness{ 1.f };
-			bool m_grid_same_color_as_canvas{ true };
+			ImVec4	m_canvas_background_color{ ImGui_fzn::color::black };
+			ImVec4	m_grid_color{ ImGui_fzn::color::black };
 
-			bool m_show_grid{ true };
+			ImVec4	m_area_highlight_color{ ImGui_fzn::color::bright_red };
+			float	m_area_highlight_thickness{ 1.f };
+
+			bool	m_grid_same_color_as_canvas{ true };
+			bool	m_show_grid{ true };
+
+			float	m_original_opacity_pct{ 100.f };
+			bool	m_show_original{ true };
 
 			std::vector< fzn::ActionKey > m_bindings;
 		};
@@ -25,6 +29,7 @@ namespace PerlerMaker
 		Options();
 
 		void menu_bar_options();
+		void bottom_bar_options();
 		void show_window();
 		void update();
 
@@ -40,6 +45,8 @@ namespace PerlerMaker
 
 		bool _begin_option_table( float _column_width );
 		void _first_column_text( const char* _text );
+
+		void _handle_actions();
 
 		bool m_show_window{ false };
 		bool m_show_keybinds{ false };

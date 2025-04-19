@@ -3,6 +3,7 @@
 
 #include <FZN/Managers/DataManager.h>
 #include <FZN/Managers/WindowManager.h>
+#include <FZN/Tools/Math.h>
 #include <FZN/UI/ImGui.h>
 #include <FZN/Tools/Logging.h>
 
@@ -103,6 +104,19 @@ namespace PerlerMaker
 		_fit_image();
 	}
 
+	void CanvasManager::set_original_sprite_opacity( float _opacity )
+	{
+		const uint8_t alpha{ static_cast< uint8_t >( _opacity / 100.f * 255.f ) };
+
+		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
+		{
+			m_base_pixels[ quad_index ].color.a		= alpha;
+			m_base_pixels[ quad_index + 1 ].color.a = alpha;
+			m_base_pixels[ quad_index + 2 ].color.a = alpha;
+			m_base_pixels[ quad_index + 3 ].color.a = alpha;
+		}
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Load the base vertex array from the chosen image
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,7 +182,7 @@ namespace PerlerMaker
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Default constructor, creation of the engine's singletons
+	// Change the position and zoom level of the image so it fits entirely in the canvas
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void CanvasManager::_fit_image()
 	{
@@ -187,20 +201,6 @@ namespace PerlerMaker
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Move a quad to the given position and update its zoom level
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	void CanvasManager::_set_quad_pos_and_zoom( sf::VertexArray& _pixels, int _quad_index, float _zoom_level, const sf::Vector2f& _pos /*= { 0.f, 0.f }*/ )
-	{
-		for( int quad_corner{ 0 }; quad_corner < 4; ++quad_corner )
-		{
-			auto base_index{ get_pixel_index( _quad_index / 4 ) };
-			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * _zoom_level, ( base_index / m_image_size.x ) * _zoom_level };
-
-			_pixels[ _quad_index + quad_corner ].position = _pos + base_pos + m_offsets[ quad_corner ] * _zoom_level;
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Move all the pixels of the vertex array to the given position
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void CanvasManager::_set_vertex_array_pos( const sf::Vector2f& _pos )
@@ -214,6 +214,20 @@ namespace PerlerMaker
 		}
 
 		_update_pixel_grid();
+	}
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Move a quad to the given position and update its zoom level
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	void CanvasManager::_set_quad_pos_and_zoom( sf::VertexArray& _pixels, int _quad_index, float _zoom_level, const sf::Vector2f& _pos /*= { 0.f, 0.f }*/ )
+	{
+		for( int quad_corner{ 0 }; quad_corner < 4; ++quad_corner )
+		{
+			auto base_index{ get_pixel_index( _quad_index / 4 ) };
+			auto base_pos = sf::Vector2f{ ( base_index % m_image_size.x ) * _zoom_level, ( base_index / m_image_size.x ) * _zoom_level };
+
+			_pixels[ _quad_index + quad_corner ].position = _pos + base_pos + m_offsets[ quad_corner ] * _zoom_level;
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -522,23 +536,26 @@ namespace PerlerMaker
 
 	void CanvasManager::_display_canvas( const sf::Color& _bg_color )
 	{
+		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
 		auto sprite_size{ m_canvas_size };
+
 		m_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
 		m_grid_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
 		m_test_image_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );	// Needed when resizing.
 		m_sprite.setPosition( ImGui::GetWindowPos() /*+ sf::Vector2f{ 0.f, 1000.f }*/ );
 		m_render_texture.clear( sf::Color::Transparent );
 
-		m_test_texture.clear( sf::Color::Transparent );
-		m_test_texture.draw( m_converted_pixels );
-		m_test_texture.display();
-		m_render_texture.draw( m_test_image_sprite );
-
 		if( m_converted_pixels.getVertexCount() > 0 )
 		{
-			m_grid_texture.clear( sf::Color::Transparent );
+			m_test_texture.clear( sf::Color::Transparent );
+			m_test_texture.draw( m_converted_pixels );
+			m_test_texture.display();
+			m_render_texture.draw( m_test_image_sprite );
 
-			auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+			if( options_datas.m_show_original && options_datas.m_original_opacity_pct > 0.f )
+				m_render_texture.draw( m_base_pixels );
+
+			m_grid_texture.clear( sf::Color::Transparent );
 
 			if( options_datas.m_show_grid )
 			{
@@ -656,24 +673,27 @@ namespace PerlerMaker
 		auto cursor_pos_y{ region_max.y - frame_height_spacing + ImGui::GetStyle().ItemSpacing.y };
 
 		ImGui::SetCursorPos( { cursor_pos_x, cursor_pos_y } );
-		ImGui::SetNextItemWidth( 150.f );
+		ImGui::SetNextItemWidth( DefaultWidgetSize.x );
 
 		auto new_pixel_size{ m_zoom_level };
-		if( ImGui_fzn::small_slider_float( "Zoom level", &new_pixel_size, 1.f, 100.f, "x%.0f" ) )
+		if( ImGui_fzn::small_slider_float( "Zoom Level", new_pixel_size, 1.f, 100.f, "x%.0f", ImGuiSliderFlags_NoInput | ImGuiSliderFlags_AlwaysClamp ) )
 			_update_zoom_level( new_pixel_size );
 
 		ImGui::SameLine();
 
-		if( ImGui::SmallButton( "fit" ) )
+		if( ImGui::SmallButton( "Fit" ) )
 			_fit_image();
 
 		ImGui::SameLine();
 
-		if( ImGui::SmallButton( "convert" ) )
+		if( ImGui::SmallButton( "Convert" ) )
 		{
 			g_perler_maker->get_palettes_manager().reset_color_counts();
 			_convert_image_colors();
 		}
+
+		ImGui::SameLine();
+		g_perler_maker->get_options().bottom_bar_options();
 	}
 
 } // namespace PerlerMaker

@@ -271,6 +271,7 @@
   <ItemGroup>
     <ClInclude Include="PerlerMaker\CanvasManager.h" />
     <ClInclude Include="PerlerMaker\Defines.h" />
+    <ClInclude Include="PerlerMaker\Event.h" />
     <ClInclude Include="PerlerMaker\Options.h" />
     <ClInclude Include="PerlerMaker\PalettesManager.h" />
     <ClInclude Include="PerlerMaker\PerlerMaker.h" />

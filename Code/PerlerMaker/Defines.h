@@ -7,6 +7,9 @@
 
 namespace PerlerMaker
 {
+	static constexpr const char* Action_ShowGrid			{ "Show Grid" };
+	static constexpr const char* Action_ShowOriginalSprite	{ "Show Original Sprite" };
+
 	enum ColorChannel
 	{
 		red,

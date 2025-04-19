@@ -8,6 +8,7 @@
 
 #include "Options.h"
 #include "Defines.h"
+#include "PerlerMaker.h"
 
 
 namespace PerlerMaker
@@ -22,7 +23,17 @@ namespace PerlerMaker
 
 	void Options::menu_bar_options()
 	{
-		ImGui::MenuItem( "Show pixel grid", "", &m_options_datas.m_show_grid );
+		ImGui::MenuItem( "Show Pixel Grid",			g_pFZN_InputMgr->GetActionKeyString( Action_ShowGrid, true ).c_str(),			&m_options_datas.m_show_grid );
+		ImGui::MenuItem( "Show Original Sprite",	g_pFZN_InputMgr->GetActionKeyString( Action_ShowOriginalSprite, true ).c_str(), &m_options_datas.m_show_original );
+	}
+
+	void Options::bottom_bar_options()
+	{
+		ImGui::SetNextItemWidth( DefaultWidgetSize.x );
+		if( ImGui_fzn::small_slider_float( "Original Sprite Opacity", m_options_datas.m_original_opacity_pct, 0.f, 100.f, "%.0f%%", ImGuiSliderFlags_NoInput | ImGuiSliderFlags_AlwaysClamp ) )
+		{
+			g_perler_maker->get_canvas_manager().set_original_sprite_opacity( m_options_datas.m_original_opacity_pct );
+		}
 	}
 
 	void Options::show_window()
@@ -36,8 +47,7 @@ namespace PerlerMaker
 
 	void Options::update()
 	{
-		if( g_pFZN_InputMgr->IsActionPressed( "Show Grid" ) )
-			m_options_datas.m_show_grid = !m_options_datas.m_show_grid;
+		_handle_actions();
 
 		if( m_show_window == false )
 			return;
@@ -130,6 +140,14 @@ namespace PerlerMaker
 
 	void Options::on_event()
 	{
+		sf::Event sf_event = g_pFZN_WindowMgr->GetWindowEvent();
+
+		if( sf_event.type == sf::Event::Closed )
+		{
+			_save_options();
+			return;
+		}
+
 		fzn::Event oEvent = g_pFZN_Core->GetEvent();
 
 		if( oEvent.m_eType == fzn::Event::eActionKeyBindDone )
@@ -237,6 +255,9 @@ namespace PerlerMaker
 		m_options_datas.m_grid_same_color_as_canvas = root[ "grid_same_color_as_canvas" ].asBool();
 		m_options_datas.m_show_grid = root[ "show_grid" ].asBool();
 
+		m_options_datas.m_show_original = root[ "show_original_sprite" ].asBool();
+		m_options_datas.m_original_opacity_pct = root[ "original_sprite_opacity" ].asFloat();
+
 		m_options_datas.m_bindings = g_pFZN_InputMgr->GetActionKeys();
 	}
 
@@ -244,6 +265,7 @@ namespace PerlerMaker
 	{
 		auto file = std::ofstream{ g_pFZN_Core->GetSaveFolderPath() + "/options.json" };
 		auto root = Json::Value{};
+		Json::StyledWriter json_writer;
 
 		auto save_color = [&root]( const char* _color_name, const ImVec4& _color, bool _save_alpha = true )
 		{
@@ -254,7 +276,6 @@ namespace PerlerMaker
 			if( _save_alpha )
 				root[ _color_name ][ ColorChannel::alpha ] = static_cast<Json::Value::UInt>( _color.w * 255.f );
 		};
-
 		save_color( "canvas_color", m_options_datas.m_canvas_background_color, false );
 		save_color( "area_highlight_color", m_options_datas.m_area_highlight_color );
 		save_color( "grid_color", m_options_datas.m_grid_color, false );
@@ -262,8 +283,11 @@ namespace PerlerMaker
 		root[ "area_highlight_thickness" ] = m_options_datas.m_area_highlight_thickness;
 		root[ "grid_same_color_as_canvas" ] = m_options_datas.m_grid_same_color_as_canvas;
 		root[ "show_grid" ] = m_options_datas.m_show_grid;
+		
+		root[ "show_original_sprite" ] = m_options_datas.m_show_original;
+		root[ "original_sprite_opacity" ] = m_options_datas.m_original_opacity_pct;
 
-		file << root;
+		file << json_writer.write( root );
 
 		g_pFZN_InputMgr->SaveCustomActionKeysToFile();
 	}
@@ -284,6 +308,18 @@ namespace PerlerMaker
 		ImGui::SameLine( ImGui::GetStyle().IndentSpacing * 0.5f );
 		ImGui::Text( _text );
 		ImGui::TableSetColumnIndex( 1 );
+	}
+
+	static void check_action_and_set_option( const char* _action, bool& _option )
+	{
+		if( g_pFZN_InputMgr->IsActionPressed( _action ) )
+			_option = !_option;
+	}
+
+	void Options::_handle_actions()
+	{
+		check_action_and_set_option( Action_ShowGrid,			m_options_datas.m_show_grid );
+		check_action_and_set_option( Action_ShowOriginalSprite, m_options_datas.m_show_original );
 	}
 
 } // namespace PerlerMaker

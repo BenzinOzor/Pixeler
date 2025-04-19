@@ -2,12 +2,7 @@
 	<Action Name="Show Grid">
 		<Input Type="Keyboard" Map="G"/>
 	</Action>
-	<Action Name="ExampleKeyboardBind">
-		 <Input Type="Keyboard" Map="Space"/> 
-		 <Input Type="Keyboard" Map="Return"/> 
-	</Action>
-	<Action Name="ExampleJoystickBind">
-		<Input Type="JoystickButton" Map="B0"/>
-		<Input Type="JoystickAxis" Map="PovX"/>
+	<Action Name="Show Original Sprite">
+		 <Input Type="Keyboard" Map="O"/> 
 	</Action>
 </Actions>
