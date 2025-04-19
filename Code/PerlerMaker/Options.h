@@ -21,7 +21,7 @@ namespace PerlerMaker
 			bool	m_show_grid{ true };
 
 			float	m_original_opacity_pct{ 100.f };
-			bool	m_show_original{ true };
+			bool	m_show_original{ false };
 
 			std::vector< fzn::ActionKey > m_bindings;
 		};

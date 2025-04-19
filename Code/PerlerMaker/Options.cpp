@@ -255,9 +255,6 @@ namespace PerlerMaker
 		m_options_datas.m_grid_same_color_as_canvas = root[ "grid_same_color_as_canvas" ].asBool();
 		m_options_datas.m_show_grid = root[ "show_grid" ].asBool();
 
-		m_options_datas.m_show_original = root[ "show_original_sprite" ].asBool();
-		m_options_datas.m_original_opacity_pct = root[ "original_sprite_opacity" ].asFloat();
-
 		m_options_datas.m_bindings = g_pFZN_InputMgr->GetActionKeys();
 	}
 
@@ -283,9 +280,6 @@ namespace PerlerMaker
 		root[ "area_highlight_thickness" ] = m_options_datas.m_area_highlight_thickness;
 		root[ "grid_same_color_as_canvas" ] = m_options_datas.m_grid_same_color_as_canvas;
 		root[ "show_grid" ] = m_options_datas.m_show_grid;
-		
-		root[ "show_original_sprite" ] = m_options_datas.m_show_original;
-		root[ "original_sprite_opacity" ] = m_options_datas.m_original_opacity_pct;
 
 		file << json_writer.write( root );
 
