@@ -38,17 +38,23 @@ namespace PerlerMaker
 			}
 
 			ImGui::TableNextColumn();
+
 			if( ImGui::Button( m_palette_edition ? "Stop Edition" : "Edit Palette" ) )
 			{
 				m_palette_edition = !m_palette_edition;
 				_reset_color_to_edit();
 			}
 
+			ImGui::SameLine();
 			if( m_palette_edition )
 			{
-				ImGui::SameLine();
 				if( ImGui::Button( "Save Palette" ) )
 					_save_palette();
+			}
+			else
+			{
+				if( ImGui::Button( "Add Palette" ) )
+					_create_new_palette();
 			}
 
 			ImGui::TableNextColumn();
@@ -145,6 +151,9 @@ namespace PerlerMaker
 				if( ImGui_fzn::square_button( "+" ) )
 					m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
 				ImGui::PopFont();
+
+				ImGui::SameLine();
+				ImGui::Text( "Add New Color" );
 			}
 		}
 
@@ -201,7 +210,6 @@ namespace PerlerMaker
 			{
 				m_color_to_edit = &_color;
 				m_edited_color = _color;
-				ImGui::OpenPopup( "Edit color" );
 			}
 
 			hovered = ImGui::IsItemHovered();
@@ -251,22 +259,34 @@ namespace PerlerMaker
 
 	void PalettesManager::_edit_color()
 	{
-		ImGui::SetNextWindowSize( { 500.f, 500.f } );
+		if( m_edited_color.is_valid( true ) )
+			ImGui::OpenPopup( "Edit Color" );
+		else
+			return;
+
+		static constexpr ImVec2	popup_size{ 400.f, 0.f };
+		static constexpr float	color_preview_width{ 70.f };
+		ImGui::SetNextWindowSize( popup_size );
 
 		const auto window_size = g_pFZN_WindowMgr->GetWindowSize();
-		ImGui::SetNextWindowPos( { window_size.x * 0.5f - 250.f, window_size.y * 0.5f - 250.f }, ImGuiCond_Appearing );
+		const ImVec2 window_pos{ window_size.x * 0.5f - popup_size.x * 0.5f, window_size.y * 0.5f - popup_size.x * 0.5f };
+		ImGui::SetNextWindowPos( window_pos, ImGuiCond_Appearing );
 
-		if( ImGui::Begin( "Edit color", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking ) )
+		const float widget_with{ popup_size.x - ImGui::GetStyle().WindowPadding.x * 2.f - color_preview_width };
+
+		if( ImGui::BeginPopupModal( "Edit Color", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking ) )
 		{
 			std::string color_id{ fzn::Tools::Sprintf( "%d", m_edited_color.m_id ) };
+			ImGui::SetNextItemWidth( widget_with );
 			if( ImGui::InputText( "ID", &color_id, ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll ) )
 				m_edited_color.m_id = std::stoi( color_id );
+			ImGui::SetNextItemWidth( widget_with );
 			ImGui::InputText( "Name", &m_edited_color.m_name, ImGuiInputTextFlags_AutoSelectAll );
-			//ImGui::ColorPicker4( "color", &m_edited_color.m_color.Value.x, ImGuiColorEditFlags_NoInputs, &m_edited_color.m_color.Value.x );
+			ImGui::Spacing();
+			ImGui::SetNextItemWidth( widget_with );
 			ImGui::ColorPicker4( "##color", &m_edited_color.m_color.Value.x, ImGuiColorEditFlags_NoAlpha, m_color_to_edit != nullptr ? &m_color_to_edit->m_color.Value.x : nullptr );
 
-
-			if( ImGui::Button( "Confirm" ) && m_edited_color.is_valid() )
+			auto confirm = [&]()
 			{
 				if( m_color_to_edit != nullptr )
 					*m_color_to_edit = m_edited_color;
@@ -274,14 +294,96 @@ namespace PerlerMaker
 					m_selected_palette->m_colors.push_back( m_edited_color );
 
 				_reset_color_to_edit();
+			};
+
+			Utils::window_bottom_confirm_cancel( m_edited_color.is_valid(), confirm, [&](){ _reset_color_to_edit(); } );
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void PalettesManager::_new_palette_popup()
+	{
+		if( m_new_palette )
+			ImGui::OpenPopup( "New Palette" );
+		else
+			return;
+
+		static constexpr ImVec2	popup_size{ 400.f, 0.f };
+		ImGui::SetNextWindowSize( popup_size );
+
+		const auto window_size = g_pFZN_WindowMgr->GetWindowSize();
+		const ImVec2 window_pos{ window_size.x * 0.5f - popup_size.x * 0.5f, window_size.y * 0.5f - popup_size.x * 0.5f };
+		ImGui::SetNextWindowPos( window_pos, ImGuiCond_Appearing );
+
+		bool is_editing_text{ false };
+
+		if( ImGui::BeginPopupModal( "New Palette" ) )
+		{
+			if( ImGui::BeginTable( "Palette Infos", 2 ) )
+			{
+				ImGui::TableSetupColumn( "Checkbox", ImGuiTableColumnFlags_WidthFixed );
+				ImGui::TableSetupColumn( "InputTexts", ImGuiTableColumnFlags_WidthStretch );
+
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex( 1 );
+
+				if( ImGui::InputText( "Palette Name", &m_selected_palette->m_name ) )
+				{
+					if( m_new_palette_infos.m_file_name_same_as_palette )
+						m_new_palette_infos.m_file_name = m_selected_palette->m_name;
+				}
+				is_editing_text = ImGui::IsItemActive();
+
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex( 0 );
+
+				if( ImGui::Checkbox( "##SameName", &m_new_palette_infos.m_file_name_same_as_palette ) )
+				{
+					if( m_new_palette_infos.m_file_name_same_as_palette )
+						m_new_palette_infos.m_file_name = m_selected_palette->m_name;
+				}
+
+				ImGui_fzn::simple_tooltip_on_hover( "Same name for palette and file" );
+
+				ImGui::TableSetColumnIndex( 1 );
+
+				if( m_new_palette_infos.m_file_name_same_as_palette )
+					ImGui::BeginDisabled();
+				ImGui::InputText( "Palette File Name", &m_new_palette_infos.m_file_name );
+				is_editing_text |= ImGui::IsItemActive();
+				if( m_new_palette_infos.m_file_name_same_as_palette )
+					ImGui::EndDisabled();
+
+				ImGui::EndTable();
 			}
 
-			ImGui::SameLine();
+			auto confirm = [&]()
+			{
+				if( m_new_palette_infos.m_file_name_same_as_palette )
+					m_new_palette_infos.m_file_name = m_selected_palette->m_name;
 
-			if( ImGui::Button( "Cancel" ) )
-				_reset_color_to_edit();
+				m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
+				m_new_palette = false;
+			};
+
+			auto cancel = [&]()
+			{
+				std::string palette_name{ m_selected_palette->m_name };
+				std::erase_if( m_palettes, [&palette_name]( const auto& _palette ) { return _palette.first == palette_name; } );
+
+				if( m_palettes.empty() )
+					m_selected_palette = nullptr;
+				else
+					m_selected_palette = &m_palettes.begin()->second;
+
+				m_new_palette = false;
+				m_palette_edition = false;
+			};
+
+			Utils::window_bottom_confirm_cancel( m_selected_palette->m_name.empty() == false && is_editing_text == false, confirm, cancel );
+
+			ImGui::EndPopup();
 		}
-
-		ImGui::End();
 	}
 };

@@ -27,8 +27,9 @@ namespace PerlerMaker
 			_header();
 			_colors_list();
 
-			if( m_edited_color.is_valid( true ) )
-				_edit_color();
+			_edit_color();
+
+			_new_palette_popup();
 		}
 
 		ImGui::End();
@@ -383,6 +384,30 @@ namespace PerlerMaker
 		return _path.substr( diff_pos + 1 );
 	}
 
+	void PalettesManager::_create_new_palette()
+	{
+		std::string new_palette_name{ _generate_new_palette_name() };
+		m_palettes[ new_palette_name ] = ColorPalette{};
+		m_new_palette = true;
+		m_palette_edition = true;
+		m_selected_palette = &m_palettes[ new_palette_name ];
+		m_selected_palette->m_name = new_palette_name;
+
+		m_new_palette_infos = NewPaletteInfos{ .m_file_name = m_selected_palette->m_name };
+	}
+
+	std::string PalettesManager::_generate_new_palette_name()
+	{
+		uint32_t nb_new_palettes{ 0 };
+		for( const auto& palette : m_palettes )
+		{
+			if( palette.first.contains( "New Palette" ) )
+				++nb_new_palettes;
+		}
+
+		return fzn::Tools::Sprintf( "New Palette %u", nb_new_palettes + 1 );
+	}
+
 	bool PalettesManager::match_filter( const ColorInfos& _color )
 	{
 		if( _color.m_id > ColorInfos::Invalid_ID )
@@ -398,4 +423,5 @@ namespace PerlerMaker
 
 		return fzn::Tools::match_filter( m_color_filter, _color.m_name );
 	}
+
 } // namespace PerlerMaker

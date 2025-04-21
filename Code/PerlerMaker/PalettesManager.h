@@ -34,6 +34,12 @@ namespace PerlerMaker
 		void reset_color_counts();
 
 	private:
+		struct NewPaletteInfos
+		{
+			std::string m_file_name;
+			bool m_file_name_same_as_palette{ true };
+		};
+
 		void _load_palettes();
 		void _load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name, bool _bOverride = false );
 		void _save_palette();
@@ -46,6 +52,9 @@ namespace PerlerMaker
 		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );
 		std::string _get_palette_root_path( const std::string& _path );
 
+		void _create_new_palette();
+		std::string _generate_new_palette_name();
+
 		bool match_filter( const ColorInfos& _color );
 
 		///////////////// IMGUI /////////////////
@@ -53,6 +62,7 @@ namespace PerlerMaker
 		void _colors_list();
 		void _selectable_color_info( ColorInfos& _color );
 		void _edit_color();
+		void _new_palette_popup();
 		
 
 		const std::string			m_fzn_palettes_path{};
@@ -63,9 +73,11 @@ namespace PerlerMaker
 		std::string_view	m_selected_preset{};
 
 		bool				m_palette_edition{ false };
+		bool				m_new_palette{ false };
 		bool				m_only_used_colors_display{ false };
 		ColorInfos*			m_color_to_edit{ nullptr };
 		ColorInfos			m_edited_color;
 		std::string			m_color_filter{};
+		NewPaletteInfos		m_new_palette_infos;
 	};
 } // namespace PerlerMaker
