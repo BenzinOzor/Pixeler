@@ -30,6 +30,6 @@ namespace PerlerMaker
 
 		void color_infos_tooltip_common( const ColorInfos& _color );
 
-		void window_bottom_confirm_cancel( bool _confirm_condition, std::function<void(void)> _confirm_fct, std::function<void( void )> _cancel_fct, const char* _confirm_label = "Confirm", const char* _cancel_label = "Cancel" );
+		void window_bottom_table( uint8_t _nb_items, std::function<void(void)> _table_content_fct );
 	} // namespace Utils
 } // namespace PerlerMaker

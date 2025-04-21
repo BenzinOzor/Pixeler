@@ -62,6 +62,8 @@ namespace PerlerMaker
 		void _colors_list();
 		void _selectable_color_info( ColorInfos& _color );
 		void _edit_color();
+		void _edit_color_buttons();
+		void _add_color_buttons();
 		void _new_palette_popup();
 		
 
@@ -75,7 +77,7 @@ namespace PerlerMaker
 		bool				m_palette_edition{ false };
 		bool				m_new_palette{ false };
 		bool				m_only_used_colors_display{ false };
-		ColorInfos*			m_color_to_edit{ nullptr };
+		ColorInfos*			m_color_to_edit{ nullptr };				// A pointer to the color we're editing, nullptr when adding a new color
 		ColorInfos			m_edited_color;
 		std::string			m_color_filter{};
 		NewPaletteInfos		m_new_palette_infos;

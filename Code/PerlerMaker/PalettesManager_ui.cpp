@@ -231,8 +231,11 @@ namespace PerlerMaker
 			auto style = ImGui::GetStyle();
 			Utils::color_infos_tooltip_common( _color );
 
-			ImGui::Separator();
-			ImGui::Text( "Total count: %d", _color.m_count );
+			if( _color.m_color >= 0 )
+			{
+				ImGui::Separator();
+				ImGui::Text( "Total count: %d", _color.m_count );
+			}
 
 			ImGui::EndTooltip();
 		}
@@ -259,12 +262,14 @@ namespace PerlerMaker
 
 	void PalettesManager::_edit_color()
 	{
+		std::string popup_title{ m_color_to_edit != nullptr ? "Edit Color" : "Add Color" };
+
 		if( m_edited_color.is_valid( true ) )
-			ImGui::OpenPopup( "Edit Color" );
+			ImGui::OpenPopup( popup_title.c_str() );
 		else
 			return;
 
-		static constexpr ImVec2	popup_size{ 400.f, 0.f };
+		static constexpr ImVec2	popup_size{ 500.f, 0.f };
 		static constexpr float	color_preview_width{ 70.f };
 		ImGui::SetNextWindowSize( popup_size );
 
@@ -274,32 +279,84 @@ namespace PerlerMaker
 
 		const float widget_with{ popup_size.x - ImGui::GetStyle().WindowPadding.x * 2.f - color_preview_width };
 
-		if( ImGui::BeginPopupModal( "Edit Color", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking ) )
+		if( ImGui::BeginPopupModal( popup_title.c_str(), nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking ) )
 		{
 			std::string color_id{ fzn::Tools::Sprintf( "%d", m_edited_color.m_id ) };
+
+			ImGui::Text( "Enter a valid ID and/or a name for your color" );
+
 			ImGui::SetNextItemWidth( widget_with );
-			if( ImGui::InputText( "ID", &color_id, ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll ) )
-				m_edited_color.m_id = std::stoi( color_id );
+			if( ImGui::InputText( "ID", &color_id, ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_AutoSelectAll ) )
+			{
+				if( color_id.empty() )
+					m_edited_color.m_id = -1;
+				else
+					m_edited_color.m_id = std::stoi( color_id );
+			}
+
+			ImGui::SameLine();
+			ImGui_fzn::helper_simple_tooltip( "ID isn't required.\n-1 will show no ID." );
+
 			ImGui::SetNextItemWidth( widget_with );
 			ImGui::InputText( "Name", &m_edited_color.m_name, ImGuiInputTextFlags_AutoSelectAll );
 			ImGui::Spacing();
 			ImGui::SetNextItemWidth( widget_with );
 			ImGui::ColorPicker4( "##color", &m_edited_color.m_color.Value.x, ImGuiColorEditFlags_NoAlpha, m_color_to_edit != nullptr ? &m_color_to_edit->m_color.Value.x : nullptr );
 
-			auto confirm = [&]()
-			{
-				if( m_color_to_edit != nullptr )
-					*m_color_to_edit = m_edited_color;
-				else if( m_selected_palette != nullptr )
-					m_selected_palette->m_colors.push_back( m_edited_color );
-
-				_reset_color_to_edit();
-			};
-
-			Utils::window_bottom_confirm_cancel( m_edited_color.is_valid(), confirm, [&](){ _reset_color_to_edit(); } );
+			if( m_color_to_edit != nullptr )
+				_edit_color_buttons();
+			else
+				_add_color_buttons();
 
 			ImGui::EndPopup();
 		}
+	}
+
+	void PalettesManager::_edit_color_buttons()
+	{
+		Utils::window_bottom_table( 2, [&]()
+		{
+			ImGui::TableSetColumnIndex( 1 );
+
+			if( ImGui_fzn::deactivable_button( "Apply", m_edited_color.is_valid(), true, DefaultWidgetSize ) )
+			{
+				*m_color_to_edit = m_edited_color;
+				_reset_color_to_edit();
+			}
+
+			ImGui_fzn::simple_tooltip_on_hover( "Add the current color to the palette and close this popup" );
+
+			ImGui::TableSetColumnIndex( 2 );
+			if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
+				_reset_color_to_edit();
+		} );
+	}
+
+	void PalettesManager::_add_color_buttons()
+	{
+		Utils::window_bottom_table( 3, [&]()
+		{
+			const bool disable_buttons{ m_edited_color.is_valid() };
+			if( ImGui_fzn::deactivable_button( "Add Another Color", disable_buttons, true, DefaultWidgetSize ) )
+			{
+				m_selected_palette->m_colors.push_back( m_edited_color );
+				m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
+			}
+			ImGui_fzn::simple_tooltip_on_hover( "Add the current color to the palette and create another one without closing this popup" );
+
+			ImGui::TableSetColumnIndex( 2 );
+			if( ImGui_fzn::deactivable_button( "Add", disable_buttons, true, DefaultWidgetSize ) )
+			{
+				m_selected_palette->m_colors.push_back( m_edited_color );
+				_reset_color_to_edit();
+			}
+
+			ImGui_fzn::simple_tooltip_on_hover( "Add the current color to the palette and close this popup" );
+
+			ImGui::TableSetColumnIndex( 3 );
+			if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
+				_reset_color_to_edit();
+		} );
 	}
 
 	void PalettesManager::_new_palette_popup()
@@ -358,30 +415,33 @@ namespace PerlerMaker
 				ImGui::EndTable();
 			}
 
-			auto confirm = [&]()
+			Utils::window_bottom_table( 2, [&]()
 			{
-				if( m_new_palette_infos.m_file_name_same_as_palette )
-					m_new_palette_infos.m_file_name = m_selected_palette->m_name;
+				const bool disable_buttons{ m_selected_palette->m_name.empty() };
+				if( ImGui_fzn::deactivable_button( "Apply", m_selected_palette->m_name.empty(), true, DefaultWidgetSize ) )
+				{
+					if( m_new_palette_infos.m_file_name_same_as_palette )
+						m_new_palette_infos.m_file_name = m_selected_palette->m_name;
 
-				m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
-				m_new_palette = false;
-			};
+					m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
+					m_new_palette = false;
+				}
 
-			auto cancel = [&]()
-			{
-				std::string palette_name{ m_selected_palette->m_name };
-				std::erase_if( m_palettes, [&palette_name]( const auto& _palette ) { return _palette.first == palette_name; } );
+				ImGui::TableSetColumnIndex( 2 );
+				if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
+				{
+					std::string palette_name{ m_selected_palette->m_name };
+					std::erase_if( m_palettes, [&palette_name]( const auto& _palette ) { return _palette.first == palette_name; } );
 
-				if( m_palettes.empty() )
-					m_selected_palette = nullptr;
-				else
-					m_selected_palette = &m_palettes.begin()->second;
+					if( m_palettes.empty() )
+						m_selected_palette = nullptr;
+					else
+						m_selected_palette = &m_palettes.begin()->second;
 
-				m_new_palette = false;
-				m_palette_edition = false;
-			};
-
-			Utils::window_bottom_confirm_cancel( m_selected_palette->m_name.empty() == false && is_editing_text == false, confirm, cancel );
+					m_new_palette = false;
+					m_palette_edition = false;
+				}
+			} );
 
 			ImGui::EndPopup();
 		}

@@ -132,20 +132,22 @@ namespace PerlerMaker
 
 			_draw_keybinds( column_width );
 
-			auto apply = [&]()
+			Utils::window_bottom_table( 2, [&]()
 			{
-				m_show_window = false;
-				_save_options();
-			};
+				if( ImGui_fzn::deactivable_button( "Apply", m_need_save == false, true, DefaultWidgetSize ) )
+				{
+					m_show_window = false;
+					_save_options();
+				}
 
-			auto cancel = [&]()
-			{
-				m_show_window = false;
-				m_options_datas = m_temp_options_datas;
-				g_pFZN_InputMgr->ResetActionKeys();
-			};
-
-			Utils::window_bottom_confirm_cancel( m_need_save, apply, cancel, "Apply" );
+				ImGui::TableSetColumnIndex( 2 );
+				if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
+				{
+					m_show_window = false;
+					m_options_datas = m_temp_options_datas;
+					g_pFZN_InputMgr->ResetActionKeys();
+				}
+			});
 		}
 
 		ImGui::End();

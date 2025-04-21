@@ -423,5 +423,4 @@ namespace PerlerMaker
 
 		return fzn::Tools::match_filter( m_color_filter, _color.m_name );
 	}
-
 } // namespace PerlerMaker

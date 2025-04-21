@@ -88,31 +88,25 @@ namespace PerlerMaker::Utils
 		color_details( to_imcolor( _color ) );
 	}
 
-	void window_bottom_confirm_cancel( bool _confirm_condition, std::function<void( void )> _confirm_fct, std::function<void( void )> _cancel_fct, const char* _confirm_label /*= "Confirm"*/, const char* _cancel_label /*= "Cancel"*/ )
+	void window_bottom_table( uint8_t _nb_items, std::function<void( void )> _table_content_fct )
 	{
 		ImGui::NewLine();
 		ImGui::NewLine();
-		ImGui::SameLine( ImGui::GetContentRegionMax().x - ( ImGui::GetStyle().WindowPadding.x + DefaultWidgetSize.x * 2.f ) );
 
-		if( _confirm_condition )
-			ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
-		else
-			ImGui::BeginDisabled();
-
-		if( ImGui::Button( _confirm_label, DefaultWidgetSize ) )
+		if( ImGui::BeginTable( "BottomTable", _nb_items + 1 ) )
 		{
-			_confirm_fct();
+			ImGui::TableSetupColumn( "Empty", ImGuiTableColumnFlags_WidthStretch );
+
+			for( uint8_t column{ 1 }; column < _nb_items + 1; ++column )
+				ImGui::TableSetupColumn( fzn::Tools::Sprintf( "Button %u", column ).c_str(), ImGuiTableColumnFlags_WidthFixed );
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex( 1 );
+
+			_table_content_fct();
+
+			ImGui::EndTable();
 		}
-
-		if( _confirm_condition )
-			ImGui::PopFont();
-		else
-			ImGui::EndDisabled();
-
-		ImGui::SameLine();
-
-		if( ImGui::Button( _cancel_label, DefaultWidgetSize ) )
-			_cancel_fct();
 	}
 
 } // namespace PerlerMaker
