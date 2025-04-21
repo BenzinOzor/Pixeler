@@ -49,7 +49,6 @@ namespace PerlerMaker
 		void _handle_actions();
 
 		bool m_show_window{ false };
-		bool m_show_keybinds{ false };
 
 		OptionsDatas m_options_datas;
 		OptionsDatas m_temp_options_datas;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 //#include <SFML/Graphics/Color.hpp>
 
 namespace sf
@@ -28,5 +29,7 @@ namespace PerlerMaker
 		void color_details( const sf::Color& _color );
 
 		void color_infos_tooltip_common( const ColorInfos& _color );
+
+		void window_bottom_confirm_cancel( bool _confirm_condition, std::function<void(void)> _confirm_fct, std::function<void( void )> _cancel_fct, const char* _confirm_label = "Confirm", const char* _cancel_label = "Cancel" );
 	} // namespace Utils
 } // namespace PerlerMaker

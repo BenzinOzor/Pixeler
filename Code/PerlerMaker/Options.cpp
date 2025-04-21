@@ -9,6 +9,7 @@
 #include "Options.h"
 #include "Defines.h"
 #include "PerlerMaker.h"
+#include "Utils.h"
 
 
 namespace PerlerMaker
@@ -131,36 +132,20 @@ namespace PerlerMaker
 
 			_draw_keybinds( column_width );
 
-			ImGui::NewLine();
-			ImGui::NewLine();
-			ImGui::SameLine( ImGui::GetContentRegionMax().x - ( ImGui::GetStyle().WindowPadding.x + DefaultWidgetSize.x * 2.f ) );
-			
-			if( m_need_save && m_show_keybinds == false )
-				ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
-			else
-				ImGui::BeginDisabled();
-			
-			if( ImGui::Button( "Apply", DefaultWidgetSize ) )
+			auto apply = [&]()
 			{
 				m_show_window = false;
 				_save_options();
-			}
+			};
 
-			if( m_need_save && m_show_keybinds == false )
-				ImGui::PopFont();
-			else
-				ImGui::EndDisabled();
-
-			if( ImGui::IsItemHovered() && m_show_keybinds )
-				ImGui::SetTooltip( "Close the bindings window first." );
-
-			ImGui::SameLine();
-			if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
+			auto cancel = [&]()
 			{
 				m_show_window = false;
-				m_show_keybinds = false;
 				m_options_datas = m_temp_options_datas;
-			}
+				g_pFZN_InputMgr->ResetActionKeys();
+			};
+
+			Utils::window_bottom_confirm_cancel( m_need_save, apply, cancel, "Apply" );
 		}
 
 		ImGui::End();
