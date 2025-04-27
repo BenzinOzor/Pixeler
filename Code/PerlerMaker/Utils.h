@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-//#include <SFML/Graphics/Color.hpp>
 
 namespace sf
 {
@@ -13,6 +12,7 @@ class ImColor;
 namespace PerlerMaker
 {
 	struct ColorInfos;
+	struct ColorPalette;
 
 
 	namespace Utils
@@ -23,7 +23,11 @@ namespace PerlerMaker
 		sf::Color to_sf_color( const ImColor& _color );
 		ImColor to_imcolor( const sf::Color& _color );
 
-		void bicolor_color_name( std::string_view _color, bool _bold, bool _used );
+		void compute_IDs_and_names_usage_infos( ColorPalette& _palette );
+		std::string get_zero_lead_id( int _id );
+
+		void text_with_leading_zeros( std::string_view _text, bool _bold, bool _used, bool _shadow );
+		void boldable_text( std::string_view _text, bool _bold, bool _used, bool _shadow );
 
 		void color_details( const ImColor& _color );
 		void color_details( const sf::Color& _color );

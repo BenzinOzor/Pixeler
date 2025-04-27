@@ -70,5 +70,8 @@
     <ClInclude Include="PerlerMaker\Event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PerlerMaker\ColorPalette.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

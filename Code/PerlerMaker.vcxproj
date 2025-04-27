@@ -123,7 +123,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\FrameWork\Code;$(SolutionDir)FrameWork\FrameWork\Dependencies\Includes;$(SolutionDir)Utilities\PerlerMaker\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;IMGUI_DEFINE_MATH_OPERATORS;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;IMGUI_DEFINE_MATH_OPERATORS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\FrameWork\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\FrameWork\Dependencies\Libs\FrameWork\$(Configuration)\;$(SolutionDir)FrameWork\FrameWork\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\FrameWork\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\FrameWork\Dependencies\Libs\LuaPlus\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -270,6 +270,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PerlerMaker\CanvasManager.h" />
+    <ClInclude Include="PerlerMaker\ColorPalette.h" />
     <ClInclude Include="PerlerMaker\Defines.h" />
     <ClInclude Include="PerlerMaker\Event.h" />
     <ClInclude Include="PerlerMaker\Options.h" />

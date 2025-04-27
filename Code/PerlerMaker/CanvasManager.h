@@ -5,6 +5,7 @@
 #include <FZN/Display/Line.h>
 
 #include "Defines.h"
+#include "ColorPalette.h"
 
 
 class sf::Texture;

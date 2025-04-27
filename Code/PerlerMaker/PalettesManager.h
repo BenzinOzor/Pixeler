@@ -5,6 +5,7 @@
 #include <FZN/UI/ImGui.h>
 
 #include "Defines.h"
+#include "ColorPalette.h"
 
 
 namespace tinyxml2
@@ -33,6 +34,8 @@ namespace PerlerMaker
 		void reset_base_palettes();
 		void reset_color_counts();
 
+		const ColorPalette* get_selected_palette() const;
+
 	private:
 		struct NewPaletteInfos
 		{
@@ -60,11 +63,12 @@ namespace PerlerMaker
 		///////////////// IMGUI /////////////////
 		void _header();
 		void _colors_list();
-		void _selectable_color_info( ColorInfos& _color );
+		bool _selectable_color_info( ColorInfos& _color, int _current_row );
 		void _edit_color();
 		void _edit_color_buttons();
 		void _add_color_buttons();
 		void _new_palette_popup();
+		void _compute_ID_column_size( bool _compute_palette_infos );
 		
 
 		const std::string			m_fzn_palettes_path{};
@@ -81,5 +85,6 @@ namespace PerlerMaker
 		ColorInfos			m_edited_color;
 		std::string			m_color_filter{};
 		NewPaletteInfos		m_new_palette_infos;
+		float				m_ID_column_width{ 0.f };
 	};
 } // namespace PerlerMaker

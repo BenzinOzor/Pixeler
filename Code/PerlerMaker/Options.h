@@ -2,6 +2,7 @@
 
 #include <Externals/ImGui/imgui.h>
 #include <FZN/UI/ImGuiAdditions.h>
+#include <FZN/Managers/InputManager.h>
 
 
 namespace PerlerMaker

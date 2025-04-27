@@ -123,6 +123,11 @@ namespace PerlerMaker
 			color.m_count = 0;
 	}
 
+	const ColorPalette* PalettesManager::get_selected_palette() const
+	{
+		return m_selected_palette;
+	}
+
 	void PalettesManager::_load_palettes()
 	{
 		if( std::filesystem::exists( m_app_palettes_path ) == false || std::filesystem::is_empty( m_app_palettes_path ) )
@@ -165,7 +170,8 @@ namespace PerlerMaker
 
 		auto color_palette = ColorPalette{};
 
-		color_palette.m_name = fzn::Tools::XMLStringAttribute( _palette, "name" );
+		const std::string palette_name{ fzn::Tools::XMLStringAttribute( _palette, "name" ) };
+		color_palette.m_name = palette_name;
 		color_palette.m_file_path = _file_name;
 
 		if( color_palette.m_name.empty() )
@@ -174,15 +180,15 @@ namespace PerlerMaker
 			color_palette.m_name = fzn::Tools::GetFileNameFromPath( color_palette.m_file_path );
 		}
 		
-		const bool already_in_map = m_palettes.find( color_palette.m_name ) != m_palettes.end();
+		const bool already_in_map = m_palettes.find( palette_name ) != m_palettes.end();
 
 		if( _bOverride == false && already_in_map )
 		{
-			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "A palette named '%s' already exists. Ignoring the new one.", color_palette.m_name.c_str() );
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "A palette named '%s' already exists. Ignoring the new one.", palette_name.c_str() );
 			return;
 		}
 
-		FZN_DBLOG( "\tCreating palette named '%s'...", color_palette.m_name.c_str() );
+		FZN_DBLOG( "\tCreating palette named '%s'...", palette_name.c_str() );
 
 		auto* color_settings = _palette->FirstChildElement( "color" );
 		auto color_infos = ColorInfos{};
@@ -217,18 +223,20 @@ namespace PerlerMaker
 			color_settings = color_settings->NextSiblingElement( "color" );
 		}
 
-		FZN_DBLOG( "\tAdded palette '%s' to catalog", color_palette.m_name.c_str() );
+		FZN_DBLOG( "\tAdded palette '%s' to catalog", palette_name.c_str() );
 
 		if( already_in_map )
 		{
-			if( m_selected_palette->m_name == color_palette.m_name )
+			if( m_selected_palette->m_name == palette_name )
 			{
-				m_selected_palette = &( m_palettes[ color_palette.m_name ] = std::move( color_palette ) );
+				m_selected_palette = &( m_palettes[ palette_name ] = std::move( color_palette ) );
 				m_selected_preset = preset_all;
 			}
 		}
 		else
-			m_palettes[ color_palette.m_name ] = std::move( color_palette );
+			m_palettes[ color_palette.m_name ] = color_palette;
+
+		Utils::compute_IDs_and_names_usage_infos( m_palettes[ palette_name ] );
 	}
 
 	void PalettesManager::_save_palette()

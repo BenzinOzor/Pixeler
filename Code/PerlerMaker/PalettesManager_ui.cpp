@@ -1,12 +1,19 @@
 #include <FZN/Managers/FazonCore.h>
 #include <FZN/Tools/Logging.h>
 #include <FZN/Tools/Tools.h>
+#include <FZN/Tools/Math.h>
 
 #include "PalettesManager.h"
 #include "Utils.h"
+#include "PerlerMaker.h"
 
 namespace PerlerMaker
 {
+	static constexpr ImColor table_row_selected{ 24, 49, 82 };
+	static constexpr ImColor checkbox_color{ 34, 59, 92 };
+	static constexpr ImColor checkbox_color_hovered{ 44, 69, 102 };
+	static constexpr ImColor checkbox_color_active{ 54, 79, 112 };
+
 	void PalettesManager::_header()
 	{
 		if( ImGui::BeginTable( "palettes and presets", 3 ) )
@@ -31,6 +38,7 @@ namespace PerlerMaker
 						m_selected_palette = &palette.second;
 						m_selected_preset = preset_all;
 						_select_colors_from_preset( m_selected_preset );
+						_compute_ID_column_size( false );
 					}
 				}
 
@@ -126,6 +134,9 @@ namespace PerlerMaker
 
 	void PalettesManager::_colors_list()
 	{
+		if( m_ID_column_width <= 0.f )
+			_compute_ID_column_size( false );
+
 		ImGui::Separator();
 		if( ImGui::BeginChild( "colors_list" ) )
 		{
@@ -140,124 +151,172 @@ namespace PerlerMaker
 				return;
 			}
 
-			for( auto& color : m_selected_palette->m_colors )
+			if( ImGui::BeginTable( "Colors", 5, ImGuiTableFlags_ScrollY ) )
 			{
-				_selectable_color_info( color );
-			}
+				ImGui::TableSetupColumn( "##Checkbox", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeightWithSpacing() );
+				ImGui::TableSetupColumn( "##ColorButton", ImGuiTableColumnFlags_WidthFixed );
+				ImGui::TableSetupColumn( "ID", ImGuiTableColumnFlags_WidthFixed, m_ID_column_width );
+				ImGui::TableSetupColumn( "Name", ImGuiTableColumnFlags_WidthStretch );
+				ImGui::TableSetupColumn( "Count  ", ImGuiTableColumnFlags_WidthFixed );
+				ImGui::TableSetupScrollFreeze( 0, 1 );
+				ImGui::TableHeadersRow();
 
-			if( m_palette_edition )
-			{
-				ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
-				if( ImGui_fzn::square_button( "+" ) )
-					m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
-				ImGui::PopFont();
+				int current_row{ 1 };
+				for( auto& color : m_selected_palette->m_colors )
+				{
+					if( _selectable_color_info( color, current_row ) )
+					++current_row;
+				}
 
-				ImGui::SameLine();
-				ImGui::Text( "Add New Color" );
+				if( m_palette_edition )
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex( 3 );
+
+					if( ImGui::Button( "Add New Color", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+						m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
+
+					ImGui::SameLine();
+				}
+
+				ImGui::EndTable();
 			}
 		}
 
 		ImGui::EndChild();
 	}
 
-	void PalettesManager::_selectable_color_info( ColorInfos& _color )
+	bool PalettesManager::_selectable_color_info( ColorInfos& _color, int _current_row )
 	{
 		if( match_filter( _color ) == false || m_only_used_colors_display && _color.m_count == 0 )
-			return;
+			return false;
 
-		const std::string color_name{ _color.m_count > 0 ? fzn::Tools::Sprintf( "%s (%d)", _color.get_full_name().c_str(), _color.m_count ) : _color.get_full_name() };
-		auto cursor_pos{ ImGui::GetCursorPos() };
-		auto cursor_screen_pos{ ImGui::GetCursorScreenPos() };
-		auto hovered{ false };
+		ImGui::PushID( _color.get_full_name().c_str() );
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex( 0 );
 
-		auto shadow_min_pos = ImVec2{};
-		const auto shadow_size = ImVec2{ ImGui::GetFrameHeight(), ImGui::GetFrameHeight() };
+		const bool row_hovered{ ImGui::TableGetHoveredRow() == _current_row };
+		const ImVec2 shadow_offset{ 2.f, 2.f };
+		const ImVec2 square_shadow_size{ ImGui::GetFrameHeight(), ImGui::GetFrameHeight() };
+		bool first_column_clicked{ false };
+
+		//////////////////////////////////////// CHECKBOX ////////////////////////////////////////
+		ImGui::SameLine( 0.f, ImGui::GetStyle().CellPadding.x );
+
+		if( row_hovered )
+		{
+			const ImVec2 shadow_min_pos{ ImGui::GetCursorScreenPos() + shadow_offset };
+			ImGui_fzn::rect_filled( { shadow_min_pos, square_shadow_size }, ImGui_fzn::color::black );
+		}
 
 		if( m_palette_edition == false )
 		{
-			ImGui::SetCursorPosY( cursor_pos.y + 1 );
-			if( ImGui::Selectable( fzn::Tools::Sprintf( "##selectable_%s", color_name.c_str() ).c_str(), false, ImGuiSelectableFlags_SpanAvailWidth, { 0, ImGui::GetTextLineHeightWithSpacing() } ) )
-				_color.m_selected = !_color.m_selected;
+			ImGui::PushStyleColor( ImGuiCol_FrameBg, checkbox_color.Value );
+			ImGui::PushStyleColor( ImGuiCol_FrameBgHovered, checkbox_color_hovered.Value );
+			ImGui::PushStyleColor( ImGuiCol_FrameBgActive, checkbox_color_active.Value );
 
-			ImGui::SameLine();
-			hovered = ImGui::IsItemHovered();
+			if( ImGui::Checkbox( "##selected", &_color.m_selected ) )
+				first_column_clicked = true;
 
-			ImGui::SetCursorPos( { ImGui::GetCursorPosX(), cursor_pos.y } );
-			if( hovered )
+			ImGui::PopStyleColor(3);
+			if( ImGui::TableGetHoveredColumn() == 0 )
 			{
-				shadow_min_pos = ImGui::GetCursorScreenPos() + ImVec2{ 2, 2 };
-				ImGui_fzn::rect_filled( { shadow_min_pos, shadow_size }, ImGui_fzn::color::black );
-			}
-
-			ImGui::PushStyleColor( ImGuiCol_FrameBg, ImColor{ 34, 59, 92 }.Value );
-			ImGui::Checkbox( fzn::Tools::Sprintf( "##checkbox_%s", color_name.c_str() ).c_str(), &_color.m_selected );
-			ImGui::PopStyleColor();
-
-			if( ImGui::IsItemHovered() )
-			{
-				ImGui::SetTooltip( "Check to use this color." );
+				ImGui::SetTooltip( "Checked if the color is used in the conversion\nClick to toggle this color" );
 			}
 		}
 		else
 		{
+			ImGui::PushStyleColor( ImGuiCol_Button, checkbox_color.Value );
+			ImGui::PushStyleColor( ImGuiCol_ButtonHovered, checkbox_color_hovered.Value );
+			ImGui::PushStyleColor( ImGuiCol_ButtonActive, checkbox_color_active.Value );
 			ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
-			ImGui_fzn::square_button( "-" );
-			ImGui::PopFont();
-
-			ImGui::SameLine();
-			ImGui::SetCursorPosY( cursor_pos.y + 1 );
-			if( ImGui::Selectable( fzn::Tools::Sprintf( "##selectable_%s", color_name.c_str() ).c_str(), false, ImGuiSelectableFlags_SpanAvailWidth, { 0, ImGui::GetTextLineHeightWithSpacing() } ) )
+			if( ImGui_fzn::square_button( "-" ) )
 			{
-				m_color_to_edit = &_color;
-				m_edited_color = _color;
+				std::erase_if( m_selected_palette->m_colors, [&_color]( const auto& _current_color ) { return _current_color == _color; } );
+				_compute_ID_column_size( true );
+				first_column_clicked = true;
 			}
+			ImGui::PopFont();
+			ImGui::PopStyleColor( 3 );
 
-			hovered = ImGui::IsItemHovered();
+			if( ImGui::TableGetHoveredColumn() == 0 )
+				ImGui::SetTooltip( "Remove from palette" );
 		}
 
-		ImGui::SameLine();
+		//////////////////////////////////////// COLOR BUTTON ////////////////////////////////////////
+		ImGui::TableSetColumnIndex( 1 );
+
+		if( row_hovered )
+		{
+			const ImVec2 shadow_min_pos{ ImGui::GetCursorScreenPos() + shadow_offset };
+			ImGui_fzn::rect_filled( { shadow_min_pos, square_shadow_size }, ImGui_fzn::color::black );
+		}
 
 		ImGui::PushStyleColor( ImGuiCol_FrameBg, ImGui_fzn::color::white );
-		if( hovered )
-		{
-			shadow_min_pos = ImGui::GetCursorScreenPos() + ImVec2{ 2, 2 };
-			ImGui_fzn::rect_filled( { shadow_min_pos, shadow_size }, ImGui_fzn::color::black );
-		}
-		ImGui::ColorButton( fzn::Tools::Sprintf( "##color_button_%s", color_name.c_str() ).c_str(), _color.m_color, ImGuiColorEditFlags_NoTooltip );
+		ImGui::ColorButton( "##color_button", _color.m_color, ImGuiColorEditFlags_NoTooltip );
+		ImGui::PopStyleColor();
 
 		if( ImGui::IsItemHovered() )
 		{
 			ImGui::BeginTooltip();
-			auto style = ImGui::GetStyle();
 			Utils::color_infos_tooltip_common( _color );
 
-			if( _color.m_color >= 0 )
+			if( _color.m_count >= 0 )
 			{
 				ImGui::Separator();
 				ImGui::Text( "Total count: %d", _color.m_count );
 			}
-
+			ImGui::Separator();
+			if( m_palette_edition )
+				ImGui::Text( "Click to edit this color" );
+			else
+				ImGui::Text( "Click to toggle this color" );
 			ImGui::EndTooltip();
 		}
 
-		ImGui::PopStyleColor();
-		ImGui::SameLine();
+		//////////////////////////////////////// ID ////////////////////////////////////////
+		if( _color.m_id >= 0 )
+		{
+			ImGui::TableSetColumnIndex( 2 );
+			ImGui::AlignTextToFramePadding();
+			Utils::text_with_leading_zeros( Utils::get_zero_lead_id( _color.m_id ).c_str(), row_hovered, _color.m_count != 0, row_hovered );
+		}
 
+		//////////////////////////////////////// NAME ////////////////////////////////////////
+		ImGui::TableSetColumnIndex( 3 );
 		ImGui::AlignTextToFramePadding();
 
-		if( hovered )
-		{
-			auto test_cursor_pos{ ImGui::GetCursorPos() };
-			ImGui::SetCursorPos( { test_cursor_pos.x + 2, test_cursor_pos.y + 2 } );
-			ImGui_fzn::bold_text_colored( ImGui_fzn::color::black, color_name );
-			ImGui::SameLine();
-			ImGui::SetNextItemAllowOverlap();
-			ImGui::SetCursorPos( test_cursor_pos );
-			Utils::bicolor_color_name( color_name, true, _color.m_count != 0 );
+		Utils::boldable_text( _color.m_name, row_hovered, _color.m_count != 0, row_hovered );
 
+		//////////////////////////////////////// COUNT ////////////////////////////////////////
+		ImGui::TableSetColumnIndex( 4 );
+		if( _color.m_count > 0 )
+		{
+			Utils::boldable_text( fzn::Tools::Sprintf( "%d", _color.m_count ), row_hovered, true, row_hovered );
 		}
-		else
-			Utils::bicolor_color_name( color_name.c_str(), false, _color.m_count != 0 );
+
+		//////////////////////////////////////// MISC ////////////////////////////////////////
+		if( row_hovered )
+		{
+			ImGuiContext* context = ImGui::GetCurrentContext();
+			if( ImGuiTable * current_table{ context->CurrentTable } )
+				current_table->RowBgColor[ 1 ] = ImGui::GetColorU32( ImGuiCol_HeaderHovered );
+
+			if( first_column_clicked == false && ImGui::IsMouseReleased( ImGuiMouseButton_Left ) )
+			{
+				if( m_palette_edition )
+				{
+					m_color_to_edit = &_color;
+					m_edited_color = _color;
+				}
+				else
+					_color.m_selected = !_color.m_selected;
+			}
+		}
+
+		ImGui::PopID();
+
+		return true;
 	}
 
 	void PalettesManager::_edit_color()
@@ -322,6 +381,7 @@ namespace PerlerMaker
 			{
 				*m_color_to_edit = m_edited_color;
 				_reset_color_to_edit();
+				_compute_ID_column_size( true );
 			}
 
 			ImGui_fzn::simple_tooltip_on_hover( "Add the current color to the palette and close this popup" );
@@ -336,11 +396,12 @@ namespace PerlerMaker
 	{
 		Utils::window_bottom_table( 3, [&]()
 		{
-			const bool disable_buttons{ m_edited_color.is_valid() };
+			const bool disable_buttons{ m_edited_color.is_valid() == false };
 			if( ImGui_fzn::deactivable_button( "Add Another Color", disable_buttons, true, DefaultWidgetSize ) )
 			{
 				m_selected_palette->m_colors.push_back( m_edited_color );
 				m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
+				_compute_ID_column_size( true );
 			}
 			ImGui_fzn::simple_tooltip_on_hover( "Add the current color to the palette and create another one without closing this popup" );
 
@@ -349,6 +410,7 @@ namespace PerlerMaker
 			{
 				m_selected_palette->m_colors.push_back( m_edited_color );
 				_reset_color_to_edit();
+				_compute_ID_column_size( true );
 			}
 
 			ImGui_fzn::simple_tooltip_on_hover( "Add the current color to the palette and close this popup" );
@@ -436,7 +498,10 @@ namespace PerlerMaker
 					if( m_palettes.empty() )
 						m_selected_palette = nullptr;
 					else
+					{
 						m_selected_palette = &m_palettes.begin()->second;
+						_compute_ID_column_size( false );
+					}
 
 					m_new_palette = false;
 					m_palette_edition = false;
@@ -445,5 +510,18 @@ namespace PerlerMaker
 
 			ImGui::EndPopup();
 		}
+	}
+
+	void PalettesManager::_compute_ID_column_size( bool _compute_palette_infos )
+	{
+		if( m_selected_palette == nullptr )
+			return;
+
+		if( _compute_palette_infos )
+			Utils::compute_IDs_and_names_usage_infos( *m_selected_palette );
+
+		// We calculate the size of 1 zero, and we'll multiply it by the number of character in the highest ID + 1.
+		const float zero_size{ ImGui::CalcTextSize( "0" ).x };
+		m_ID_column_width = zero_size * m_selected_palette->m_nb_digits_in_IDs + 1;
 	}
 };

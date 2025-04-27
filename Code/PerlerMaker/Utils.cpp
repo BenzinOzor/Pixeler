@@ -1,9 +1,11 @@
 #include <SFML/Graphics/Color.hpp>
 
 #include <FZN/UI/ImGui.h>
+#include <FZN/Tools/Math.h>
 
 #include "Utils.h"
 #include "Defines.h"
+#include "PerlerMaker.h"
 
 
 namespace PerlerMaker::Utils
@@ -18,9 +20,51 @@ namespace PerlerMaker::Utils
 		return { _color.r / 255.f, _color.g / 255.f, _color.b / 255.f, _color.a / 255.f };
 	}
 
-	void bicolor_color_name( std::string_view _color, bool _bold, bool _used )
+	void compute_IDs_and_names_usage_infos( ColorPalette& _palette )
 	{
-		auto first_number_pos{ _color.find_first_not_of( '0' ) };
+		int highest_id{ -1 };
+		bool at_least_one_valid_name{ false };
+
+		for( const ColorInfos& color : _palette.m_colors )
+		{
+			if( color.m_id > highest_id )
+				highest_id = color.m_id;
+
+			at_least_one_valid_name |= color.m_name.empty() == false;
+		}
+
+		_palette.m_nb_digits_in_IDs = highest_id < 0 ? 0 : fzn::Math::get_number_of_digits( highest_id );
+		_palette.m_using_names = at_least_one_valid_name;
+	}
+
+	std::string get_zero_lead_id( int _id )
+	{
+		if( _id < 0 )
+			return "";
+
+		std::string result{ fzn::Tools::Sprintf( "%d", _id ) };
+
+		const ColorPalette* current_palette{ nullptr };
+
+		if( g_perler_maker != nullptr )
+			current_palette = g_perler_maker->get_palettes_manager().get_selected_palette();
+
+		if( current_palette == nullptr )
+			return result;
+
+		const int zeros_to_add{ current_palette->m_nb_digits_in_IDs - fzn::Math::get_number_of_digits( _id ) };
+
+		if( zeros_to_add <= 0 )
+			return result;
+
+		result.insert( 0, zeros_to_add, '0' );
+		return result;
+	}
+
+
+	void text_with_leading_zeros( std::string_view _text, bool _bold, bool _used, bool _shadow )
+	{
+		auto first_number_pos{ _text.find_first_not_of( '0' ) };
 
 		const ImGuiStyle style{ ImGui::GetStyle() };
 
@@ -29,26 +73,35 @@ namespace PerlerMaker::Utils
 		const ImColor leading_zeros_color{ grayed_out ? ImGui_fzn::color::dark_gray : ImGui_fzn::color::gray };
 		const ImColor id_name_color{ grayed_out ? ImGui_fzn::color::gray : style.Colors[ ImGuiCol_Text ] };
 
-		if( first_number_pos == std::string::npos )
+		if( first_number_pos == std::string::npos || first_number_pos == 0 )
 		{
-			if( _bold )
-				ImGui_fzn::bold_text_colored( id_name_color, _color );
-			else
-				ImGui::TextColored( id_name_color, _color.data() );
-
+			boldable_text( _text, _bold, _used, _shadow );
 			return;
 		}
 
-		auto leading_zeros = std::string{ _color.substr( 0, first_number_pos ) };
-		auto number = std::string{ _color.substr( first_number_pos ) };
+		auto leading_zeros = std::string{ _text.substr( 0, first_number_pos ) };
+		auto number = std::string{ _text.substr( first_number_pos ) };
 
-		auto spacing_backup{ ImGui::GetStyle().ItemSpacing.x };
-		ImGui::GetStyle().ItemSpacing.x = 0.f;
+		if( _shadow )
+		{
+			const ImVec2 shadow_offset{ 2.f, 2.f };
+			const ImVec2 backup_cursor_pos{ ImGui::GetCursorPos() };
+
+			ImGui::SetCursorPos( backup_cursor_pos + shadow_offset );
+			ImGui_fzn::bold_text_colored( ImGui_fzn::color::black, _text );
+			ImGui::SameLine();
+			ImGui::SetNextItemAllowOverlap();
+			ImGui::SetCursorPos( backup_cursor_pos );
+		}
+
+		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.f, style.ItemSpacing.y } );
 
 		if( _bold )
 		{
+			const ImVec2 backup_cursor_pos{ ImGui::GetCursorPos() };
 			ImGui_fzn::bold_text_colored( leading_zeros_color, leading_zeros );
 			ImGui::SameLine();
+			ImGui::SetCursorPosY( backup_cursor_pos.y );	// I don't understand why I have to do this now.
 			ImGui_fzn::bold_text_colored( id_name_color, number );
 		}
 		else
@@ -58,12 +111,35 @@ namespace PerlerMaker::Utils
 			ImGui::TextColored( id_name_color, number.c_str() );
 		}
 
-		ImGui::GetStyle().ItemSpacing.x = spacing_backup;
+		ImGui::PopStyleVar();
+	}
+
+	void boldable_text( std::string_view _text, bool _bold, bool _used, bool _shadow )
+	{
+		if( _shadow )
+		{
+			const ImVec2 shadow_offset{ 2.f, 2.f };
+			const ImVec2 backup_cursor_pos{ ImGui::GetCursorPos() };
+
+			ImGui::SetCursorPos( backup_cursor_pos + shadow_offset );
+			ImGui_fzn::bold_text_colored( ImGui_fzn::color::black, _text );
+			ImGui::SameLine();
+			ImGui::SetNextItemAllowOverlap();
+			ImGui::SetCursorPos( backup_cursor_pos );
+		}
+
+		const bool		grayed_out{ _used == false && _bold == false };
+		const ImColor	text_color{ grayed_out ? ImGui_fzn::color::gray : ImGui::GetStyle().Colors[ ImGuiCol_Text ] };
+
+		if( _bold )
+			ImGui_fzn::bold_text_colored( text_color, _text );
+		else
+			ImGui::TextColored( text_color, _text.data() );
 	}
 
 	void color_infos_tooltip_common( const ColorInfos& _color )
 	{
-		bicolor_color_name( _color.get_full_name(), true, true );
+		text_with_leading_zeros( _color.get_full_name(), true, true, false );
 		ImGui::Separator();
 
 		color_details( _color.m_color );
@@ -108,6 +184,5 @@ namespace PerlerMaker::Utils
 			ImGui::EndTable();
 		}
 	}
-
 } // namespace PerlerMaker
 
