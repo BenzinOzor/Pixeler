@@ -9,7 +9,8 @@
 
 namespace PerlerMaker
 {
-	static constexpr ImColor table_row_selected{ 24, 49, 82 };
+	static constexpr ImColor table_row_selected{ 29, 46, 63 };
+	static constexpr ImColor table_row_not_selected{ 24, 37, 51 };
 	static constexpr ImColor checkbox_color{ 34, 59, 92 };
 	static constexpr ImColor checkbox_color_hovered{ 44, 69, 102 };
 	static constexpr ImColor checkbox_color_active{ 54, 79, 112 };
@@ -205,6 +206,15 @@ namespace PerlerMaker
 		const ImVec2 square_shadow_size{ ImGui::GetFrameHeight(), ImGui::GetFrameHeight() };
 		bool first_column_clicked{ false };
 
+		ImGuiContext* context = ImGui::GetCurrentContext();
+		ImGuiTable * current_table{ context->CurrentTable };
+
+		if( current_table == nullptr )
+		{
+			ImGui::PopID();
+			return false;
+		}
+
 		//////////////////////////////////////// CHECKBOX ////////////////////////////////////////
 		ImGui::SameLine( 0.f, ImGui::GetStyle().CellPadding.x );
 
@@ -303,9 +313,7 @@ namespace PerlerMaker
 		//////////////////////////////////////// MISC ////////////////////////////////////////
 		if( row_hovered )
 		{
-			ImGuiContext* context = ImGui::GetCurrentContext();
-			if( ImGuiTable * current_table{ context->CurrentTable } )
-				current_table->RowBgColor[ 1 ] = ImGui::GetColorU32( ImGuiCol_HeaderHovered );
+			current_table->RowBgColor[ 1 ] = ImGui::GetColorU32( ImGuiCol_HeaderHovered );
 
 			if( first_column_clicked == false && ImGui::IsMouseReleased( ImGuiMouseButton_Left ) )
 			{
@@ -318,6 +326,8 @@ namespace PerlerMaker
 					_color.m_selected = !_color.m_selected;
 			}
 		}
+		else if( _color.m_selected )
+			current_table->RowBgColor[ 1 ] = table_row_selected;
 
 		ImGui::PopID();
 
