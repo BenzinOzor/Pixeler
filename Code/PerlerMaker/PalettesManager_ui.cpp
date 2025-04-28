@@ -151,35 +151,40 @@ namespace PerlerMaker
 				return;
 			}
 
-			if( ImGui::BeginTable( "Colors", 5, ImGuiTableFlags_ScrollY ) )
+			ImVec2 table_size{ 0.f, ImGui::GetContentRegionAvail().y };
+			if( m_palette_edition )
+				table_size.y -= ImGui::GetFrameHeightWithSpacing();
+			if( ImGui::BeginChild( "color_table", table_size ) )
 			{
-				ImGui::TableSetupColumn( "##Checkbox", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeightWithSpacing() );
-				ImGui::TableSetupColumn( "##ColorButton", ImGuiTableColumnFlags_WidthFixed );
-				ImGui::TableSetupColumn( "ID", ImGuiTableColumnFlags_WidthFixed, m_ID_column_width );
-				ImGui::TableSetupColumn( "Name", ImGuiTableColumnFlags_WidthStretch );
-				ImGui::TableSetupColumn( "Count  ", ImGuiTableColumnFlags_WidthFixed );
-				ImGui::TableSetupScrollFreeze( 0, 1 );
-				ImGui::TableHeadersRow();
-
-				int current_row{ 1 };
-				for( auto& color : m_selected_palette->m_colors )
+				if( ImGui::BeginTable( "Colors", 5, ImGuiTableFlags_ScrollY ) )
 				{
-					if( _selectable_color_info( color, current_row ) )
-					++current_row;
+					ImGui::TableSetupColumn( "##Checkbox", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeightWithSpacing() );
+					ImGui::TableSetupColumn( "##ColorButton", ImGuiTableColumnFlags_WidthFixed );
+					ImGui::TableSetupColumn( "ID", ImGuiTableColumnFlags_WidthFixed, m_ID_column_width );
+					ImGui::TableSetupColumn( "Name", ImGuiTableColumnFlags_WidthStretch );
+					ImGui::TableSetupColumn( "Count  ", ImGuiTableColumnFlags_WidthFixed );
+					ImGui::TableSetupScrollFreeze( 0, 1 );
+					ImGui::TableHeadersRow();
+
+					int current_row{ 1 };
+					for( auto& color : m_selected_palette->m_colors )
+					{
+						if( _selectable_color_info( color, current_row ) )
+							++current_row;
+					}
+
+					ImGui::EndTable();
 				}
 
-				if( m_palette_edition )
-				{
-					ImGui::TableNextRow();
-					ImGui::TableSetColumnIndex( 3 );
+				ImGui::EndChild();
+			}
 
-					if( ImGui::Button( "Add New Color", { ImGui::GetContentRegionAvail().x, 0.f } ) )
-						m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
+			if( m_palette_edition )
+			{
+				if( ImGui::Button( "Add New Color", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+					m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
 
-					ImGui::SameLine();
-				}
-
-				ImGui::EndTable();
+				ImGui::SameLine();
 			}
 		}
 
