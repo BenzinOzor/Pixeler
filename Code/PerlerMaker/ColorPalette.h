@@ -69,8 +69,8 @@ namespace PerlerMaker
 
 	struct ColorPalette
 	{
-		bool using_IDs() const { return m_nb_digits_in_IDs > 0; }
-		bool using_names() const { return m_using_names; }
+		bool is_using_IDs() const { return m_nb_digits_in_IDs > 0; }
+		bool is_using_names() const { return m_using_names; }
 
 		std::string m_name{};
 		std::string m_file_path{};

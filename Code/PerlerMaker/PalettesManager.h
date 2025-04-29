@@ -62,6 +62,7 @@ namespace PerlerMaker
 
 		///////////////// IMGUI /////////////////
 		void _header();
+		bool _color_table_begin();
 		void _colors_list();
 		bool _selectable_color_info( ColorInfos& _color, int _current_row );
 		void _edit_color();

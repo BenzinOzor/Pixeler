@@ -133,6 +133,48 @@ namespace PerlerMaker
 		}
 	}
 
+	bool PalettesManager::_color_table_begin()
+	{
+		int nb_columns = 2;
+
+		if( m_selected_palette == nullptr )
+			return false;
+
+		if( m_selected_palette->is_using_IDs() )
+			++nb_columns;
+
+		if( m_selected_palette->is_using_names() )
+			++nb_columns;
+
+		// When the conversion has been done, all colors have a count of at least 0, otherwise -1.
+		const bool conversion_happened{ m_selected_palette->m_colors.empty() == false && m_selected_palette->m_colors.begin()->m_count >= 0 };
+		if( conversion_happened )
+			++nb_columns;
+
+		if( ImGui::BeginTable( "Colors", nb_columns, ImGuiTableFlags_ScrollY ) )
+		{
+			ImGui::TableSetupColumn( "##Checkbox", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeightWithSpacing() );
+			ImGui::TableSetupColumn( "##ColorButton", ImGuiTableColumnFlags_WidthFixed );
+
+			if( m_selected_palette->is_using_IDs() )
+				ImGui::TableSetupColumn( "ID", m_selected_palette->is_using_names() ? ImGuiTableColumnFlags_WidthFixed : ImGuiTableColumnFlags_WidthStretch, m_ID_column_width );
+
+			if( m_selected_palette->is_using_names() )
+				ImGui::TableSetupColumn( "Name", ImGuiTableColumnFlags_WidthStretch );
+
+			if( conversion_happened )
+				ImGui::TableSetupColumn( "Count  ", ImGuiTableColumnFlags_WidthFixed );
+
+			ImGui::TableSetupScrollFreeze( 0, 1 );
+			ImGui::TableHeadersRow();
+
+			return true;
+		}
+
+		return false;
+	}
+
+
 	void PalettesManager::_colors_list()
 	{
 		if( m_ID_column_width <= 0.f )
@@ -155,18 +197,11 @@ namespace PerlerMaker
 			ImVec2 table_size{ 0.f, ImGui::GetContentRegionAvail().y };
 			if( m_palette_edition )
 				table_size.y -= ImGui::GetFrameHeightWithSpacing();
+
 			if( ImGui::BeginChild( "color_table", table_size ) )
 			{
-				if( ImGui::BeginTable( "Colors", 5, ImGuiTableFlags_ScrollY ) )
+				if( _color_table_begin() )
 				{
-					ImGui::TableSetupColumn( "##Checkbox", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeightWithSpacing() );
-					ImGui::TableSetupColumn( "##ColorButton", ImGuiTableColumnFlags_WidthFixed );
-					ImGui::TableSetupColumn( "ID", ImGuiTableColumnFlags_WidthFixed, m_ID_column_width );
-					ImGui::TableSetupColumn( "Name", ImGuiTableColumnFlags_WidthStretch );
-					ImGui::TableSetupColumn( "Count  ", ImGuiTableColumnFlags_WidthFixed );
-					ImGui::TableSetupScrollFreeze( 0, 1 );
-					ImGui::TableHeadersRow();
-
 					int current_row{ 1 };
 					for( auto& color : m_selected_palette->m_colors )
 					{
@@ -197,9 +232,10 @@ namespace PerlerMaker
 		if( match_filter( _color ) == false || m_only_used_colors_display && _color.m_count == 0 )
 			return false;
 
+		int current_column{ 0 };
+
 		ImGui::PushID( _color.get_full_name().c_str() );
 		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex( 0 );
 
 		const bool row_hovered{ ImGui::TableGetHoveredRow() == _current_row };
 		const ImVec2 shadow_offset{ 2.f, 2.f };
@@ -216,6 +252,7 @@ namespace PerlerMaker
 		}
 
 		//////////////////////////////////////// CHECKBOX ////////////////////////////////////////
+		ImGui::TableSetColumnIndex( current_column++ );
 		ImGui::SameLine( 0.f, ImGui::GetStyle().CellPadding.x );
 
 		if( row_hovered )
@@ -259,7 +296,7 @@ namespace PerlerMaker
 		}
 
 		//////////////////////////////////////// COLOR BUTTON ////////////////////////////////////////
-		ImGui::TableSetColumnIndex( 1 );
+		ImGui::TableSetColumnIndex( current_column++ );
 
 		if( row_hovered )
 		{
@@ -290,24 +327,34 @@ namespace PerlerMaker
 		}
 
 		//////////////////////////////////////// ID ////////////////////////////////////////
-		if( _color.m_id >= 0 )
+		if( m_selected_palette->is_using_IDs() )
 		{
-			ImGui::TableSetColumnIndex( 2 );
-			ImGui::AlignTextToFramePadding();
-			Utils::text_with_leading_zeros( Utils::get_zero_lead_id( _color.m_id ).c_str(), row_hovered, _color.m_count != 0, row_hovered );
+			ImGui::TableSetColumnIndex( current_column++ );
+
+			if( _color.m_id >= 0 )
+			{
+				ImGui::AlignTextToFramePadding();
+				Utils::text_with_leading_zeros( Utils::get_zero_lead_id( _color.m_id ).c_str(), row_hovered, _color.m_count != 0, row_hovered );
+			}
 		}
 
 		//////////////////////////////////////// NAME ////////////////////////////////////////
-		ImGui::TableSetColumnIndex( 3 );
-		ImGui::AlignTextToFramePadding();
+		if( m_selected_palette->is_using_names() )
+		{
+			ImGui::TableSetColumnIndex( current_column++ );
+			ImGui::AlignTextToFramePadding();
 
-		Utils::boldable_text( _color.m_name, row_hovered, _color.m_count != 0, row_hovered );
+			Utils::boldable_text( _color.m_name, row_hovered, _color.m_count != 0, row_hovered );
+		}
 
 		//////////////////////////////////////// COUNT ////////////////////////////////////////
-		ImGui::TableSetColumnIndex( 4 );
-		if( _color.m_count > 0 )
+		if( m_selected_palette->m_colors.empty() == false && m_selected_palette->m_colors.begin()->m_count >= 0 )
 		{
-			Utils::boldable_text( fzn::Tools::Sprintf( "%d", _color.m_count ), row_hovered, true, row_hovered );
+			ImGui::TableSetColumnIndex( current_column++ );
+			if( _color.m_count > 0 )
+			{
+				Utils::boldable_text( fzn::Tools::Sprintf( "%d", _color.m_count ), row_hovered, true, row_hovered );
+			}
 		}
 
 		//////////////////////////////////////// MISC ////////////////////////////////////////
