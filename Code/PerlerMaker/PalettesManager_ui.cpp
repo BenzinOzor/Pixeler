@@ -439,7 +439,7 @@ namespace PerlerMaker
 		{
 			ImGui::TableSetColumnIndex( 1 );
 
-			if( ImGui_fzn::deactivable_button( "Apply", m_edited_color.is_valid(), true, DefaultWidgetSize ) )
+			if( ImGui_fzn::deactivable_button( "Apply", m_edited_color.is_valid() == false, true, DefaultWidgetSize ) )
 			{
 				*m_color_to_edit = m_edited_color;
 				_reset_color_to_edit();
