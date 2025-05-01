@@ -1,4 +1,5 @@
 #include <FZN/Managers/FazonCore.h>
+#include <FZN/Managers/DataManager.h>
 #include <FZN/Tools/Logging.h>
 #include <FZN/Tools/Tools.h>
 #include <FZN/Tools/Math.h>
@@ -82,7 +83,7 @@ namespace PerlerMaker
 			}
 
 			ImGui::TableNextColumn();
-			_preset_hamberger_menu();
+			_preset_hamburger_menu();
 			/*if( ImGui_fzn::deactivable_button( "Save Preset", m_selected_preset == preset_all ) )
 			{
 				if( _update_preset() )
@@ -119,8 +120,18 @@ namespace PerlerMaker
 
 	void PalettesManager::_palette_hamburger_menu()
 	{
-		if( ImGui_fzn::square_button( "##PaletteHamburgerMenu" ) )
-			ImGui::OpenPopup( "Palette Hamburger" );
+		const ImVec2 cursor_pos{ ImGui::GetCursorPos() };
+
+		if( sf::Texture* texture = g_pFZN_DataMgr->GetTexture( "HamburgerIcon" ) )
+		{
+			if( ImGui::ImageButton( *texture, 6 ) )
+				ImGui::OpenPopup( "Palette Hamburger" );
+		}
+		else
+		{
+			if( ImGui_fzn::square_button( "##PaletteHamburgerMenu" ) )
+				ImGui::OpenPopup( "Palette Hamburger" );
+		}
 
 		auto set_edition = [&]( bool _state )
 		{
@@ -183,10 +194,18 @@ namespace PerlerMaker
 		}
 	}
 
-	void PalettesManager::_preset_hamberger_menu()
+	void PalettesManager::_preset_hamburger_menu()
 	{
-		if( ImGui_fzn::square_button( "##PresetHamburgerMenu" ) )
-			ImGui::OpenPopup( "Preset Hamburger" );
+		if( sf::Texture* texture = g_pFZN_DataMgr->GetTexture( "HamburgerIcon" ) )
+		{
+			if( ImGui::ImageButton( *texture, 6 ) )
+				ImGui::OpenPopup( "Preset Hamburger" );
+		}
+		else
+		{
+			if( ImGui_fzn::square_button( "##PresetHamburgerMenu" ) )
+				ImGui::OpenPopup( "Preset Hamburger" );
+		}
 
 		if( ImGui::BeginPopup( "Preset Hamburger" ) )
 		{

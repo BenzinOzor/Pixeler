@@ -65,7 +65,7 @@ namespace PerlerMaker
 		///////////////// IMGUI /////////////////
 		void _header();
 		void _palette_hamburger_menu();
-		void _preset_hamberger_menu();
+		void _preset_hamburger_menu();
 		bool _color_table_begin();
 		void _colors_list();
 		bool _selectable_color_info( ColorInfos& _color, int _current_row );
