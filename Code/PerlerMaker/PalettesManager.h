@@ -46,6 +46,7 @@ namespace PerlerMaker
 		void _load_palettes();
 		void _load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name, bool _bOverride = false );
 		void _save_palette();
+		void _delete_palette( ColorPalette& _palette_to_delete );
 
 		void _set_all_colors_selection( bool _selected );
 		void _select_colors_from_preset( std::string_view _preset );
@@ -56,12 +57,15 @@ namespace PerlerMaker
 		std::string _get_palette_root_path( const std::string& _path );
 
 		void _create_new_palette();
+		void _create_palette_from_other( ColorPalette& _other );
 		std::string _generate_new_palette_name();
 
 		bool match_filter( const ColorInfos& _color );
 
 		///////////////// IMGUI /////////////////
 		void _header();
+		void _palette_hamburger_menu();
+		void _preset_hamberger_menu();
 		bool _color_table_begin();
 		void _colors_list();
 		bool _selectable_color_info( ColorInfos& _color, int _current_row );
@@ -77,6 +81,7 @@ namespace PerlerMaker
 
 		ColorPalettes		m_palettes;
 		ColorPalette*		m_selected_palette{ nullptr };
+		ColorPalette		m_backup_palette;
 		std::string_view	m_selected_preset{};
 
 		bool				m_palette_edition{ false };

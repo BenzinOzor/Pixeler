@@ -112,6 +112,9 @@ namespace PerlerMaker
 
 			_load_palette( xml_file.FirstChildElement( "color_palette" ), file_name, true );
 		}
+
+		if( m_selected_palette == nullptr )
+			m_selected_palette = &m_palettes.begin()->second;
 	}
 
 	void PalettesManager::reset_color_counts()
@@ -295,6 +298,24 @@ namespace PerlerMaker
 		FZN_DBLOG( "Saved palette '%s' at '%s'", m_selected_palette->m_name.c_str(), palette_path.c_str() );
 	}
 
+	void PalettesManager::_delete_palette( ColorPalette& _palette_to_delete )
+	{
+		std::string_view palette_name{ _palette_to_delete.m_name };
+		std::filesystem::path palette_path{ m_app_palettes_path / std::filesystem::path{ _palette_to_delete.m_file_path } };
+
+		std::erase_if( m_palettes, [&palette_name]( const auto& _palette ) { return _palette.first == palette_name; } );
+
+		if( m_palettes.empty() )
+			m_selected_palette = nullptr;
+		else
+		{
+			m_selected_palette = &m_palettes.begin()->second;
+			_compute_ID_column_size( false );
+		}
+
+		std::filesystem::remove( palette_path );
+	}
+
 	void PalettesManager::_set_all_colors_selection( bool _selected )
 	{
 		if( m_selected_palette == nullptr )
@@ -394,10 +415,21 @@ namespace PerlerMaker
 
 	void PalettesManager::_create_new_palette()
 	{
-		std::string new_palette_name{ _generate_new_palette_name() };
+		const std::string new_palette_name{ _generate_new_palette_name() };
 		m_palettes[ new_palette_name ] = ColorPalette{};
 		m_new_palette = true;
 		m_palette_edition = true;
+		m_selected_palette = &m_palettes[ new_palette_name ];
+		m_selected_palette->m_name = new_palette_name;
+
+		m_new_palette_infos = NewPaletteInfos{ .m_file_name = m_selected_palette->m_name };
+	}
+
+	void PalettesManager::_create_palette_from_other( ColorPalette& _other )
+	{
+		const std::string new_palette_name{ fzn::Tools::Sprintf( "%s 2", _other.m_name.c_str() ) };
+		m_palettes[ new_palette_name ] = _other;
+		m_new_palette = true;
 		m_selected_palette = &m_palettes[ new_palette_name ];
 		m_selected_palette->m_name = new_palette_name;
 

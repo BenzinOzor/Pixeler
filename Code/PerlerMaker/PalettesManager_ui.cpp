@@ -48,23 +48,7 @@ namespace PerlerMaker
 
 			ImGui::TableNextColumn();
 
-			if( ImGui::Button( m_palette_edition ? "Stop Edition" : "Edit Palette" ) )
-			{
-				m_palette_edition = !m_palette_edition;
-				_reset_color_to_edit();
-			}
-
-			ImGui::SameLine();
-			if( m_palette_edition )
-			{
-				if( ImGui::Button( "Save Palette" ) )
-					_save_palette();
-			}
-			else
-			{
-				if( ImGui::Button( "Add Palette" ) )
-					_create_new_palette();
-			}
+			_palette_hamburger_menu();
 
 			ImGui::TableNextColumn();
 			ImGui::AlignTextToFramePadding();
@@ -77,7 +61,7 @@ namespace PerlerMaker
 
 			if( m_selected_palette == nullptr )
 			{
-				ImGui::PushItemFlag( ImGuiItemFlags_Disabled, true );
+				ImGui::BeginDisabled();
 				preset_combo_preview = "select a palette first";
 			}
 			else if( m_selected_preset.empty() == false )
@@ -98,17 +82,17 @@ namespace PerlerMaker
 			}
 
 			ImGui::TableNextColumn();
-			if( ImGui_fzn::deactivable_button( "Save Preset", m_selected_preset == preset_all ) )
+			_preset_hamberger_menu();
+			/*if( ImGui_fzn::deactivable_button( "Save Preset", m_selected_preset == preset_all ) )
 			{
 				if( _update_preset() )
 					_save_palette();
 			}
 			ImGui::SameLine();
-			ImGui_fzn::deactivable_button( "Save Preset As...", m_selected_preset == preset_all );
+			ImGui_fzn::deactivable_button( "Save Preset As...", m_selected_preset == preset_all );*/
 
 			if( m_selected_palette == nullptr )
-				ImGui::PopItemFlag();
-
+				ImGui::EndDisabled();
 
 			ImGui::EndTable();
 		}
@@ -130,6 +114,98 @@ namespace PerlerMaker
 				_set_all_colors_selection( false );
 
 			ImGui::EndTable();
+		}
+	}
+
+	void PalettesManager::_palette_hamburger_menu()
+	{
+		if( ImGui_fzn::square_button( "##PaletteHamburgerMenu" ) )
+			ImGui::OpenPopup( "Palette Hamburger" );
+
+		auto set_edition = [&]( bool _state )
+		{
+			m_palette_edition = _state;
+			_reset_color_to_edit();
+		};
+
+		bool save_as_popup( false );
+
+		if( ImGui::BeginPopup( "Palette Hamburger" ) )
+		{
+			const bool is_editing{ m_palette_edition };
+
+			if( m_palette_edition )
+			{
+				if( ImGui::MenuItem( "Cancel Edition" ) )
+				{
+					*m_selected_palette = m_backup_palette;
+					set_edition( false );
+				}
+				if( ImGui::MenuItem( "Save" ) )
+				{
+					set_edition( false );
+					m_backup_palette = ColorPalette{};
+				}
+			}
+			else
+			{
+				if( ImGui::MenuItem( "Create New" ) )
+				{
+					_create_new_palette();
+				}
+
+				if( m_selected_palette != nullptr )
+				{
+					if( ImGui::MenuItem( "Edit" ) )
+					{
+						m_backup_palette = *m_selected_palette;
+						set_edition( true );
+					}
+					if( ImGui::MenuItem( "Duplicate" ) )
+					{
+						_create_palette_from_other( *m_selected_palette );
+						m_backup_palette = *m_selected_palette;
+						set_edition( true );
+					}
+					if( ImGui::MenuItem( "Delete" ) )
+					{
+						_delete_palette( *m_selected_palette );
+					}
+				}
+			}
+
+			if( m_selected_palette != nullptr && ImGui::MenuItem( "Save As..." ) )
+			{
+				_create_palette_from_other( *m_selected_palette );
+			}
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void PalettesManager::_preset_hamberger_menu()
+	{
+		if( ImGui_fzn::square_button( "##PresetHamburgerMenu" ) )
+			ImGui::OpenPopup( "Preset Hamburger" );
+
+		if( ImGui::BeginPopup( "Preset Hamburger" ) )
+		{
+			if( m_selected_preset != preset_all && ImGui::MenuItem( "Save" ) )
+			{
+				if( _update_preset() )
+					_save_palette();
+			}
+			if( ImGui::MenuItem( "Save As..." ) )
+			{
+			}
+			if( ImGui::MenuItem( "Add" ) )
+			{
+			}
+			if( ImGui::MenuItem( "Duplicate" ) )
+			{
+			}
+
+			ImGui::EndPopup();
 		}
 	}
 
@@ -549,21 +625,16 @@ namespace PerlerMaker
 
 					m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
 					m_new_palette = false;
+
+					if( m_selected_palette->m_colors.empty() == false )
+						_save_palette();
 				}
 
 				ImGui::TableSetColumnIndex( 2 );
 				if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
 				{
 					std::string palette_name{ m_selected_palette->m_name };
-					std::erase_if( m_palettes, [&palette_name]( const auto& _palette ) { return _palette.first == palette_name; } );
-
-					if( m_palettes.empty() )
-						m_selected_palette = nullptr;
-					else
-					{
-						m_selected_palette = &m_palettes.begin()->second;
-						_compute_ID_column_size( false );
-					}
+					_delete_palette( *m_selected_palette );
 
 					m_new_palette = false;
 					m_palette_edition = false;
