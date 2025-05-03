@@ -30,6 +30,7 @@ namespace PerlerMaker
 			_edit_color();
 
 			_new_palette_popup();
+			_new_preset_popup();
 		}
 
 		ImGui::End();
@@ -129,6 +130,14 @@ namespace PerlerMaker
 	const ColorPalette* PalettesManager::get_selected_palette() const
 	{
 		return m_selected_palette;
+	}
+
+	void PalettesManager::_select_palette( ColorPalette& _palette )
+	{
+		m_selected_palette = &_palette;
+		m_selected_preset = preset_all;
+		_select_colors_from_preset( m_selected_preset );
+		_compute_ID_column_size( false );
 	}
 
 	void PalettesManager::_load_palettes()
@@ -313,7 +322,32 @@ namespace PerlerMaker
 			_compute_ID_column_size( false );
 		}
 
-		std::filesystem::remove( palette_path );
+		if( std::filesystem::exists( palette_path ) )
+			std::filesystem::remove( palette_path );
+	}
+
+	void PalettesManager::_delete_preset( std::string_view _preset_to_delete )
+	{
+		if( m_selected_palette == nullptr || _preset_to_delete == preset_all )
+			return;
+
+		m_selected_palette->m_presets.erase( _preset_to_delete.data() );
+
+		if( m_selected_preset == _preset_to_delete )
+		{
+			m_selected_preset = preset_all;
+			_select_colors_from_preset( m_selected_preset );
+		}
+	}
+
+	void PalettesManager::_restore_backup_palette()
+	{
+		auto it_palette = m_palettes.find( m_backup_palette.m_name );
+
+		if( it_palette == m_palettes.end() )
+			return;
+
+		it_palette->second = m_backup_palette;
 	}
 
 	void PalettesManager::_set_all_colors_selection( bool _selected )
@@ -341,6 +375,23 @@ namespace PerlerMaker
 
 				m_selected_palette->m_colors[ color_id ].m_selected = true;
 			}
+		}
+	}
+
+	void PalettesManager::_fill_preset_with_current_selection( ColorPreset& _preset )
+	{
+		if( m_selected_palette == nullptr )
+			return;
+
+		_preset.clear();
+
+		int color_id{ 0 };
+		for( const ColorInfos& color : m_selected_palette->m_colors )
+		{
+			if( color.m_selected )
+				_preset.push_back( color_id );
+
+			++color_id;
 		}
 	}
 
@@ -413,39 +464,78 @@ namespace PerlerMaker
 		return _path.substr( diff_pos + 1 );
 	}
 
-	void PalettesManager::_create_new_palette()
+	void PalettesManager::_create_new_palette( ColorPalette* _other /*= nullptr*/ )
 	{
-		const std::string new_palette_name{ _generate_new_palette_name() };
-		m_palettes[ new_palette_name ] = ColorPalette{};
 		m_new_palette = true;
-		m_palette_edition = true;
-		m_selected_palette = &m_palettes[ new_palette_name ];
-		m_selected_palette->m_name = new_palette_name;
 
-		m_new_palette_infos = NewPaletteInfos{ .m_file_name = m_selected_palette->m_name };
+		if( _other == nullptr )
+		{
+			m_new_palette_infos = NewPaletteInfos{ _generate_new_palette_name( "New Palette" ) };
+		}
+		else
+		{
+			m_new_palette_infos = NewPaletteInfos{ _generate_new_palette_name( _other->m_name ) };
+			m_new_palette_infos.m_source_palette = _other;
+		}
+
+		m_new_palette_infos.m_file_name = m_new_palette_infos.m_name;
 	}
 
-	void PalettesManager::_create_palette_from_other( ColorPalette& _other )
+	std::string PalettesManager::_generate_new_palette_name( std::string_view _palette_name )
 	{
-		const std::string new_palette_name{ fzn::Tools::Sprintf( "%s 2", _other.m_name.c_str() ) };
-		m_palettes[ new_palette_name ] = _other;
-		m_new_palette = true;
-		m_selected_palette = &m_palettes[ new_palette_name ];
-		m_selected_palette->m_name = new_palette_name;
+		std::string_view preset_name{ _palette_name.empty() ? "New Palette" : _palette_name };
 
-		m_new_palette_infos = NewPaletteInfos{ .m_file_name = m_selected_palette->m_name };
-	}
-
-	std::string PalettesManager::_generate_new_palette_name()
-	{
 		uint32_t nb_new_palettes{ 0 };
 		for( const auto& palette : m_palettes )
 		{
-			if( palette.first.contains( "New Palette" ) )
+			if( palette.first.contains( preset_name ) )
 				++nb_new_palettes;
 		}
 
-		return fzn::Tools::Sprintf( "New Palette %u", nb_new_palettes + 1 );
+		return fzn::Tools::Sprintf( "%s %u", preset_name.data(), nb_new_palettes + 1 );
+	}
+
+	void PalettesManager::_create_new_preset( bool _from_current_selection )
+	{
+		if( m_selected_palette == nullptr )
+			return;
+
+		m_new_preset = true;
+
+		m_new_preset_infos = NewPresetInfos{ _generate_new_preset_name( "New Preset" ) };
+		m_new_preset_infos.m_create_from_current_selection = _from_current_selection;
+	}
+
+	void PalettesManager::_create_new_preset_from_other( std::string_view _other )
+	{
+		if( m_selected_palette == nullptr )
+			return;
+
+		m_new_preset = true;
+
+		m_new_preset_infos = NewPresetInfos{ _generate_new_preset_name( _other ) };
+		
+		auto it_preset{ m_selected_palette->m_presets.find( std::string{ _other } ) };
+
+		if( it_preset != m_selected_palette->m_presets.end() )
+			m_new_preset_infos.m_source_preset = &it_preset->second;
+	}
+
+	std::string PalettesManager::_generate_new_preset_name( std::string_view _preset_name )
+	{
+		if( m_selected_palette == nullptr )
+			return {};
+
+		std::string_view preset_name{ _preset_name.empty() ? "New Preset" : _preset_name };
+
+		uint32_t nb_new_presets{ 0 };
+		for( const auto& preset : m_selected_palette->m_presets )
+		{
+			if( preset.first.contains( preset_name ) )
+				++nb_new_presets;
+		}
+
+		return fzn::Tools::Sprintf( "%s %u", preset_name.data(), nb_new_presets + 1 );
 	}
 
 	bool PalettesManager::match_filter( const ColorInfos& _color )

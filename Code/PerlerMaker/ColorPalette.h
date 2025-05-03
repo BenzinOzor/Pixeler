@@ -11,6 +11,12 @@
 
 namespace PerlerMaker
 {
+	/*struct ColorID
+	{
+		std::string			m_name;						// can be empty
+		int					m_id{ Invalid_ID };			// can be invalid
+	};*/
+
 	struct ColorInfos
 	{
 		static constexpr int Invalid_ID{ -1 };
@@ -66,16 +72,17 @@ namespace PerlerMaker
 	};
 	using ColorInfosVector = std::vector< ColorInfos >;
 	using ColorPreset = std::vector< int >;
+	using ColorPresets = std::unordered_map< std::string, ColorPreset >;
 
 	struct ColorPalette
 	{
 		bool is_using_IDs() const { return m_nb_digits_in_IDs > 0; }
 		bool is_using_names() const { return m_using_names; }
 
-		std::string m_name{};
-		std::string m_file_path{};
+		std::string m_name;
+		std::string m_file_path;
 		ColorInfosVector m_colors;
-		std::unordered_map< std::string, ColorPreset > m_presets;	// for each preset name, a list of selected colors (by index in the vector).
+		ColorPresets m_presets;	// for each preset name, a list of selected colors (by index in the vector).
 
 		uint8_t m_nb_digits_in_IDs{ 0 };
 		bool	m_using_names{ true };

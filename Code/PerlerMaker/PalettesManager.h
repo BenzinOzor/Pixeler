@@ -39,26 +39,43 @@ namespace PerlerMaker
 	private:
 		struct NewPaletteInfos
 		{
+			std::string m_name;
 			std::string m_file_name;
 			bool m_file_name_same_as_palette{ true };
+			bool m_restore_backup_palette{ false };
+			bool m_set_new_palette_as_backup{ false };
+			ColorPalette* m_source_palette{ nullptr };
+		};
+		struct NewPresetInfos
+		{
+			std::string m_name;
+			ColorPreset* m_source_preset{ nullptr };
+			bool m_create_from_current_selection{ false };
 		};
 
+		void _select_palette( ColorPalette& _palette );
 		void _load_palettes();
 		void _load_palette( tinyxml2::XMLElement* _palette, std::string_view _file_name, bool _bOverride = false );
 		void _save_palette();
 		void _delete_palette( ColorPalette& _palette_to_delete );
+		void _delete_preset( std::string_view _preset_to_delete );
+		void _restore_backup_palette();
 
 		void _set_all_colors_selection( bool _selected );
 		void _select_colors_from_preset( std::string_view _preset );
+		void _fill_preset_with_current_selection( ColorPreset& _preset );
 		bool _update_preset();
 		void _reset_color_to_edit();
 
 		std::string _get_presets_from_color_index( ColorPalette* _palette, uint32_t _color_index );
 		std::string _get_palette_root_path( const std::string& _path );
 
-		void _create_new_palette();
-		void _create_palette_from_other( ColorPalette& _other );
-		std::string _generate_new_palette_name();
+		void _create_new_palette( ColorPalette* _other = nullptr );
+		std::string _generate_new_palette_name( std::string_view _palette_name );
+
+		void _create_new_preset( bool _from_current_selection );
+		void _create_new_preset_from_other( std::string_view _other );
+		std::string _generate_new_preset_name( std::string_view _preset_name );
 
 		bool match_filter( const ColorInfos& _color );
 
@@ -73,6 +90,7 @@ namespace PerlerMaker
 		void _edit_color_buttons();
 		void _add_color_buttons();
 		void _new_palette_popup();
+		void _new_preset_popup();
 		void _compute_ID_column_size( bool _compute_palette_infos );
 		
 
@@ -82,15 +100,17 @@ namespace PerlerMaker
 		ColorPalettes		m_palettes;
 		ColorPalette*		m_selected_palette{ nullptr };
 		ColorPalette		m_backup_palette;
-		std::string_view	m_selected_preset{};
+		std::string			m_selected_preset;
 
 		bool				m_palette_edition{ false };
 		bool				m_new_palette{ false };
+		bool				m_new_preset{ false };
 		bool				m_only_used_colors_display{ false };
 		ColorInfos*			m_color_to_edit{ nullptr };				// A pointer to the color we're editing, nullptr when adding a new color
 		ColorInfos			m_edited_color;
 		std::string			m_color_filter{};
 		NewPaletteInfos		m_new_palette_infos;
+		NewPresetInfos		m_new_preset_infos;
 		float				m_ID_column_width{ 0.f };
 	};
 } // namespace PerlerMaker

@@ -31,21 +31,46 @@ namespace PerlerMaker
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth( -1.f );
 
+			if( m_palette_edition )
+				ImGui::BeginDisabled();
+
 			if( ImGui::BeginCombo( "##Palette", m_selected_palette != nullptr ? m_selected_palette->m_name.c_str() : "> select <" ) )
 			{
 				for( auto& palette : m_palettes )
 				{
-					if( ImGui::Selectable( palette.first.c_str(), m_selected_palette != nullptr ? m_selected_palette->m_name == palette.first : false ) )
+					if( ImGui_fzn::bold_selectable( palette.first.c_str(), m_selected_palette != nullptr ? m_selected_palette->m_name == palette.first : false ) )
 					{
-						m_selected_palette = &palette.second;
-						m_selected_preset = preset_all;
-						_select_colors_from_preset( m_selected_preset );
-						_compute_ID_column_size( false );
+						_select_palette( palette.second );
+					}
+					if( ImGui::IsItemHovered() )
+					{
+						if( ImGui::BeginTooltip() )
+						{
+							ImGui_fzn::bold_text( palette.second.m_name );
+							ImGui::Separator();
+
+							ImGui::Text( "Colors:" );
+							ImGui::SameLine();
+							ImGui_fzn::bold_text( "%d", palette.second.m_colors.size() );
+
+							ImGui::Text( "Presets:" );
+							ImGui::SameLine();
+							ImGui_fzn::bold_text( "%d", palette.second.m_presets.size() );
+
+							ImGui::Text( "File:" );
+							ImGui::SameLine();
+							ImGui_fzn::bold_text( "%s", palette.second.m_file_path.c_str() );
+
+							ImGui::EndTooltip();
+						}
 					}
 				}
 
 				ImGui::EndCombo();
 			}
+
+			if( m_palette_edition )
+				ImGui::EndDisabled();
 
 			ImGui::TableNextColumn();
 
@@ -65,17 +90,37 @@ namespace PerlerMaker
 				ImGui::BeginDisabled();
 				preset_combo_preview = "select a palette first";
 			}
-			else if( m_selected_preset.empty() == false )
-				preset_combo_preview = m_selected_preset;
+			else
+			{
+				if( m_palette_edition )
+					ImGui::BeginDisabled();
+
+				if( m_selected_preset.empty() == false )
+					preset_combo_preview = m_selected_preset;
+			}
 
 			if( ImGui::BeginCombo( "##Preset", preset_combo_preview.c_str() ) )
 			{
 				for( auto& preset : m_selected_palette->m_presets )
 				{
-					if( ImGui::Selectable( preset.first.c_str(), preset.first == m_selected_preset ) )
+					if( ImGui_fzn::bold_selectable( preset.first.c_str(), preset.first == m_selected_preset ) )
 					{
 						m_selected_preset = preset.first;
 						_select_colors_from_preset( m_selected_preset );
+					}
+					if( ImGui::IsItemHovered() )
+					{
+						if( ImGui::BeginTooltip() )
+						{
+							ImGui_fzn::bold_text( preset.first );
+							ImGui::Separator();
+
+							ImGui::Text( "Colors:" );
+							ImGui::SameLine();
+							ImGui_fzn::bold_text( "%d", preset.second.size() );
+
+							ImGui::EndTooltip();
+						}
 					}
 				}
 
@@ -84,15 +129,8 @@ namespace PerlerMaker
 
 			ImGui::TableNextColumn();
 			_preset_hamburger_menu();
-			/*if( ImGui_fzn::deactivable_button( "Save Preset", m_selected_preset == preset_all ) )
-			{
-				if( _update_preset() )
-					_save_palette();
-			}
-			ImGui::SameLine();
-			ImGui_fzn::deactivable_button( "Save Preset As...", m_selected_preset == preset_all );*/
 
-			if( m_selected_palette == nullptr )
+			if( m_selected_palette == nullptr || m_palette_edition )
 				ImGui::EndDisabled();
 
 			ImGui::EndTable();
@@ -102,6 +140,9 @@ namespace PerlerMaker
 		ImGui_fzn::Filter( m_color_filter, "Search color by name or ID" );
 
 		ImGui::Checkbox( "Display only used colors", &m_only_used_colors_display );
+
+		if( m_palette_edition )
+			ImGui::BeginDisabled();
 
 		if( ImGui::BeginTable( "selections", 2 ) )
 		{
@@ -116,10 +157,14 @@ namespace PerlerMaker
 
 			ImGui::EndTable();
 		}
+
+		if( m_palette_edition )
+			ImGui::EndDisabled();
 	}
 
 	void PalettesManager::_palette_hamburger_menu()
 	{
+		ImGui::PushID( "PaletteHamburgerMenu" );
 		const ImVec2 cursor_pos{ ImGui::GetCursorPos() };
 
 		if( sf::Texture* texture = g_pFZN_DataMgr->GetTexture( "HamburgerIcon" ) )
@@ -149,13 +194,20 @@ namespace PerlerMaker
 			{
 				if( ImGui::MenuItem( "Cancel Edition" ) )
 				{
-					*m_selected_palette = m_backup_palette;
+					_restore_backup_palette();
 					set_edition( false );
 				}
 				if( ImGui::MenuItem( "Save" ) )
 				{
 					set_edition( false );
 					m_backup_palette = ColorPalette{};
+					_save_palette();
+				}
+				if( m_selected_palette != nullptr && ImGui::MenuItem( "Save As..." ) )
+				{
+					_create_new_palette( m_selected_palette );
+					m_new_palette_infos.m_restore_backup_palette = true;
+					set_edition( false );
 				}
 			}
 			else
@@ -174,28 +226,26 @@ namespace PerlerMaker
 					}
 					if( ImGui::MenuItem( "Duplicate" ) )
 					{
-						_create_palette_from_other( *m_selected_palette );
-						m_backup_palette = *m_selected_palette;
+						_create_new_palette( m_selected_palette );
+						m_new_palette_infos.m_set_new_palette_as_backup = true;
 						set_edition( true );
 					}
 					if( ImGui::MenuItem( "Delete" ) )
 					{
 						_delete_palette( *m_selected_palette );
+						_save_palette();
 					}
 				}
 			}
 
-			if( m_selected_palette != nullptr && ImGui::MenuItem( "Save As..." ) )
-			{
-				_create_palette_from_other( *m_selected_palette );
-			}
-
 			ImGui::EndPopup();
 		}
+		ImGui::PopID();
 	}
 
 	void PalettesManager::_preset_hamburger_menu()
 	{
+		ImGui::PushID( "PresetHamburgerMenu" );
 		if( sf::Texture* texture = g_pFZN_DataMgr->GetTexture( "HamburgerIcon" ) )
 		{
 			if( ImGui::ImageButton( *texture, 6 ) )
@@ -209,6 +259,10 @@ namespace PerlerMaker
 
 		if( ImGui::BeginPopup( "Preset Hamburger" ) )
 		{
+			if( ImGui::MenuItem( "Create New" ) )
+			{
+				_create_new_preset( false );
+			}
 			if( m_selected_preset != preset_all && ImGui::MenuItem( "Save" ) )
 			{
 				if( _update_preset() )
@@ -216,16 +270,20 @@ namespace PerlerMaker
 			}
 			if( ImGui::MenuItem( "Save As..." ) )
 			{
-			}
-			if( ImGui::MenuItem( "Add" ) )
-			{
+				_create_new_preset( true );
 			}
 			if( ImGui::MenuItem( "Duplicate" ) )
 			{
+				_create_new_preset_from_other( m_selected_preset );
+			}
+			if( m_selected_preset != preset_all && ImGui::MenuItem( "Delete" ) )
+			{
+				_delete_preset( m_selected_preset );
 			}
 
 			ImGui::EndPopup();
 		}
+		ImGui::PopID();
 	}
 
 	bool PalettesManager::_color_table_begin()
@@ -592,8 +650,6 @@ namespace PerlerMaker
 		const ImVec2 window_pos{ window_size.x * 0.5f - popup_size.x * 0.5f, window_size.y * 0.5f - popup_size.x * 0.5f };
 		ImGui::SetNextWindowPos( window_pos, ImGuiCond_Appearing );
 
-		bool is_editing_text{ false };
-
 		if( ImGui::BeginPopupModal( "New Palette" ) )
 		{
 			if( ImGui::BeginTable( "Palette Infos", 2 ) )
@@ -604,12 +660,11 @@ namespace PerlerMaker
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex( 1 );
 
-				if( ImGui::InputText( "Palette Name", &m_selected_palette->m_name ) )
+				if( ImGui::InputText( "Palette Name", &m_new_palette_infos.m_name ) )
 				{
 					if( m_new_palette_infos.m_file_name_same_as_palette )
-						m_new_palette_infos.m_file_name = m_selected_palette->m_name;
+						m_new_palette_infos.m_file_name = m_new_palette_infos.m_name;
 				}
-				is_editing_text = ImGui::IsItemActive();
 
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex( 0 );
@@ -617,7 +672,7 @@ namespace PerlerMaker
 				if( ImGui::Checkbox( "##SameName", &m_new_palette_infos.m_file_name_same_as_palette ) )
 				{
 					if( m_new_palette_infos.m_file_name_same_as_palette )
-						m_new_palette_infos.m_file_name = m_selected_palette->m_name;
+						m_new_palette_infos.m_file_name = m_new_palette_infos.m_name;
 				}
 
 				ImGui_fzn::simple_tooltip_on_hover( "Same name for palette and file" );
@@ -627,7 +682,7 @@ namespace PerlerMaker
 				if( m_new_palette_infos.m_file_name_same_as_palette )
 					ImGui::BeginDisabled();
 				ImGui::InputText( "Palette File Name", &m_new_palette_infos.m_file_name );
-				is_editing_text |= ImGui::IsItemActive();
+
 				if( m_new_palette_infos.m_file_name_same_as_palette )
 					ImGui::EndDisabled();
 
@@ -636,27 +691,114 @@ namespace PerlerMaker
 
 			Utils::window_bottom_table( 2, [&]()
 			{
-				const bool disable_buttons{ m_selected_palette->m_name.empty() };
-				if( ImGui_fzn::deactivable_button( "Apply", m_selected_palette->m_name.empty(), true, DefaultWidgetSize ) )
+				auto it_palette = m_palettes.find( m_new_palette_infos.m_name );
+
+				const bool disable_button{ it_palette != m_palettes.end() || m_new_palette_infos.m_name.empty() };
+
+				if( ImGui_fzn::deactivable_button( "Confirm", disable_button, true, DefaultWidgetSize ) )
 				{
-					if( m_new_palette_infos.m_file_name_same_as_palette )
-						m_new_palette_infos.m_file_name = m_selected_palette->m_name;
+					if( m_new_palette_infos.m_file_name_same_as_palette || m_new_palette_infos.m_file_name.empty() )
+						m_new_palette_infos.m_file_name = m_new_palette_infos.m_name;
+
+					m_palettes[ m_new_palette_infos.m_name ] = ColorPalette{ m_new_palette_infos.m_name };
+					_select_palette( m_palettes[ m_new_palette_infos.m_name ] );
+
+					if( m_new_palette_infos.m_source_palette != nullptr )
+					{
+						m_selected_palette->m_colors			= m_new_palette_infos.m_source_palette->m_colors;
+						m_selected_palette->m_presets			= m_new_palette_infos.m_source_palette->m_presets;
+						m_selected_palette->m_nb_digits_in_IDs	= m_new_palette_infos.m_source_palette->m_nb_digits_in_IDs;
+						m_selected_palette->m_using_names		= m_new_palette_infos.m_source_palette->m_using_names;
+					}
 
 					m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
-					m_new_palette = false;
 
-					if( m_selected_palette->m_colors.empty() == false )
-						_save_palette();
+					if( m_new_palette_infos.m_restore_backup_palette )
+						_restore_backup_palette();
+					else if( m_new_palette_infos.m_set_new_palette_as_backup )
+						m_backup_palette = m_palettes[ m_new_palette_infos.m_name ];
+
+					_save_palette();
+
+					m_new_palette = false;
+					m_new_palette_infos = NewPaletteInfos{};
+				}
+				if( disable_button )
+				{
+					ImGui_fzn::simple_tooltip_on_hover( "Name field is empty or given name is already used for an other palette" );
 				}
 
 				ImGui::TableSetColumnIndex( 2 );
 				if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
 				{
-					std::string palette_name{ m_selected_palette->m_name };
-					_delete_palette( *m_selected_palette );
-
-					m_new_palette = false;
 					m_palette_edition = false;
+					m_new_palette = false;
+					m_new_palette_infos = NewPaletteInfos{};
+				}
+			} );
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void PalettesManager::_new_preset_popup()
+	{
+		if( m_new_preset )
+			ImGui::OpenPopup( "New Preset" );
+		else
+			return;
+
+		static constexpr ImVec2	popup_size{ 400.f, 0.f };
+		ImGui::SetNextWindowSize( popup_size );
+
+		const auto window_size = g_pFZN_WindowMgr->GetWindowSize();
+		const ImVec2 window_pos{ window_size.x * 0.5f - popup_size.x * 0.5f, window_size.y * 0.5f - popup_size.x * 0.5f };
+		ImGui::SetNextWindowPos( window_pos, ImGuiCond_Appearing );
+
+		bool is_editing_text{ false };
+
+		if( ImGui::BeginPopupModal( "New Preset" ) )
+		{
+			ImGui::InputText( "Preset Name", &m_new_preset_infos.m_name );
+
+			Utils::window_bottom_table( 2, [&]()
+			{
+				auto it_preset = m_selected_palette->m_presets.find( m_new_preset_infos.m_name );
+
+				const bool disable_button{ it_preset != m_selected_palette->m_presets.end() || m_new_preset_infos.m_name.empty() };
+
+				if( ImGui_fzn::deactivable_button( "Confirm", disable_button, true, DefaultWidgetSize ) )
+				{
+					if( m_new_preset_infos.m_source_preset != nullptr )
+					{
+						m_selected_palette->m_presets[ m_new_preset_infos.m_name ] = *m_new_preset_infos.m_source_preset;
+					}
+					else if( m_new_preset_infos.m_create_from_current_selection )
+					{
+						_fill_preset_with_current_selection( m_selected_palette->m_presets[ m_new_preset_infos.m_name ] );
+					}
+					else
+						m_selected_palette->m_presets[ m_new_preset_infos.m_name ] = ColorPreset{};
+
+					if( m_selected_palette->m_colors.empty() == false )
+						_save_palette();
+
+					m_selected_preset = m_new_preset_infos.m_name;
+					_select_colors_from_preset( m_selected_preset );
+
+					m_new_preset = false;
+					m_new_preset_infos = NewPresetInfos{};
+				}
+				if( disable_button )
+				{
+					ImGui_fzn::simple_tooltip_on_hover( "Name field is empty or given name is already used in the current palette presets" );
+				}
+
+				ImGui::TableSetColumnIndex( 2 );
+				if( ImGui::Button( "Cancel", DefaultWidgetSize ) )
+				{
+					m_new_preset = false;
+					m_new_preset_infos = NewPresetInfos{};
 				}
 			} );
 
