@@ -20,23 +20,6 @@ namespace PerlerMaker::Utils
 		return { _color.r / 255.f, _color.g / 255.f, _color.b / 255.f, _color.a / 255.f };
 	}
 
-	void compute_IDs_and_names_usage_infos( ColorPalette& _palette )
-	{
-		int highest_id{ -1 };
-		bool at_least_one_valid_name{ false };
-
-		for( const ColorInfos& color : _palette.m_colors )
-		{
-			if( color.m_id > highest_id )
-				highest_id = color.m_id;
-
-			at_least_one_valid_name |= color.m_name.empty() == false;
-		}
-
-		_palette.m_nb_digits_in_IDs = highest_id < 0 ? 0 : fzn::Math::get_number_of_digits( highest_id );
-		_palette.m_using_names = at_least_one_valid_name;
-	}
-
 	std::string get_zero_lead_id( int _id )
 	{
 		if( _id < 0 )

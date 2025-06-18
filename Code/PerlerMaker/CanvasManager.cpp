@@ -117,9 +117,9 @@ namespace PerlerMaker
 		}
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Load the base vertex array from the chosen image
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_load_pixels( sf::Texture* _texture )
 	{
 		if( _texture == nullptr )
@@ -181,9 +181,9 @@ namespace PerlerMaker
 		m_image_float_rect.height	= image_pos_max.y - image_pos_min.y;
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Change the position and zoom level of the image so it fits entirely in the canvas
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_fit_image()
 	{
 		const float horizontal_ratio{ m_canvas_size.x / m_image_float_rect.width };
@@ -200,9 +200,9 @@ namespace PerlerMaker
 		_set_vertex_array_pos( sf::Vector2f{ left, top } - sf::Vector2f{ m_image_float_rect.left, m_image_float_rect.top } * m_zoom_level );
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Move all the pixels of the vertex array to the given position
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_set_vertex_array_pos( const sf::Vector2f& _pos )
 	{
 		m_image_offest = _pos;
@@ -216,9 +216,9 @@ namespace PerlerMaker
 		_update_pixel_grid();
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Move a quad to the given position and update its zoom level
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_set_quad_pos_and_zoom( sf::VertexArray& _pixels, int _quad_index, float _zoom_level, const sf::Vector2f& _pos /*= { 0.f, 0.f }*/ )
 	{
 		for( int quad_corner{ 0 }; quad_corner < 4; ++quad_corner )
@@ -230,9 +230,9 @@ namespace PerlerMaker
 		}
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Update the pixels to a new zoom level
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_update_zoom_level( float _new_pixel_size )
 	{
 		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
@@ -275,9 +275,9 @@ namespace PerlerMaker
 		}
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Convert the base pixels to new colors according to the currently selected palette
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_convert_image_colors()
 	{
 		const PalettesManager& palettes_manager{ g_perler_maker->get_palettes_manager() };
@@ -285,7 +285,7 @@ namespace PerlerMaker
 		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
 		{
 			auto [ new_color, color_infos ] = palettes_manager.convert_color( m_base_pixels[ quad_index ].color );
-
+			
 			m_converted_pixels[ quad_index + 0 ].color = new_color;
 			m_converted_pixels[ quad_index + 1 ].color = new_color;
 			m_converted_pixels[ quad_index + 2 ].color = new_color;
@@ -296,11 +296,11 @@ namespace PerlerMaker
 		}
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Get the corresponding pixel index to the given quad index.
-	// Quad index: id of the quad in the vertex array. 0 is the first quad created/used in the picture.
-	// Pixel index: id of the pixel in the image, transparent pixels included. 0 is the very first pixel at the top left of the picture.
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// ································································
+	// @brief Get the corresponding pixel index to the given quad index.
+	// @param _quad_index id of the quad in the vertex array. 0 is the first quad created/used in the picture.
+	// @return Pixel index: id of the pixel in the image, transparent pixels included. 0 is the very first pixel at the top left of the picture.
+	// ································································
 	uint32_t CanvasManager::get_pixel_index( uint32_t _quad_index )
 	{
 		auto it = std::ranges::find( m_pixels_descs, _quad_index, &PixelDesc::m_quad_index );
@@ -364,9 +364,9 @@ namespace PerlerMaker
 		return &pixel_desc;
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Get the local position of the mouse on the canvas.
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	ImVec2 CanvasManager::_get_mouse_pos() const
 	{
 		// GetCurrentWindow crashes for some odd reason ? (loosing context) so calculating TitleBarHeight myself.
@@ -406,9 +406,9 @@ namespace PerlerMaker
 		return { pos_x, pos_y };
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	// Get the infos of the area the mouse is hovering. All the pixels in the area + a vertex array of the points surrounding it.
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//································································
 	void CanvasManager::_compute_pixel_area( uint32_t _pixel_index )
 	{
 		if( _pixel_index >= m_pixels_descs.size() )

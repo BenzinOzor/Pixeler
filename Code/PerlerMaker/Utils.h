@@ -23,7 +23,6 @@ namespace PerlerMaker
 		sf::Color to_sf_color( const ImColor& _color );
 		ImColor to_imcolor( const sf::Color& _color );
 
-		void compute_IDs_and_names_usage_infos( ColorPalette& _palette );
 		std::string get_zero_lead_id( int _id );
 
 		void text_with_leading_zeros( std::string_view _text, bool _bold, bool _used, bool _shadow );
