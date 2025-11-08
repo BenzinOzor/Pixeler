@@ -320,6 +320,8 @@ namespace PerlerMaker
 			color_settings = color_settings->NextSiblingElement( "color" );
 		}
 
+		std::ranges::sort( color_palette.m_presets, presets_sorter );
+
 		FZN_DBLOG( "\tAdded palette '%s' to catalog", palette_name.c_str() );
 
 		if( already_in_map )
@@ -376,7 +378,7 @@ namespace PerlerMaker
 
 		if( m_selected_palette == nullptr )
 			return;
-
+		
 		tinyxml2::XMLDocument dest_file{};
 		auto* color_palette{ dest_file.NewElement( "color_palette" ) };
 		dest_file.InsertEndChild( color_palette );

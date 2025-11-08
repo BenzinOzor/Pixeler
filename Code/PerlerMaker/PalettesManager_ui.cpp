@@ -142,6 +142,9 @@ namespace PerlerMaker
 							ImGui::EndTooltip();
 						}
 					}
+
+					if( preset.m_name == color_preset_all && m_selected_palette->m_presets.size() > 1 )
+						ImGui::Separator();
 				}
 
 				ImGui::EndCombo();
@@ -307,13 +310,17 @@ namespace PerlerMaker
 			{
 				_create_new_preset_from_current();
 			}
-			ImGui::Separator();
-			ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::light_red );
-			if( _is_preset_editable() && ImGui::MenuItem( "Delete" ) )
+
+			if( _is_preset_editable() )
 			{
-				_delete_preset();
+				ImGui::Separator();
+				ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::light_red );
+				if( ImGui::MenuItem( "Delete" ) )
+				{
+					_delete_preset();
+				}
+				ImGui::PopStyleColor();
 			}
-			ImGui::PopStyleColor();
 
 			ImGui::EndPopup();
 		}
@@ -866,7 +873,16 @@ namespace PerlerMaker
 						m_selected_palette->m_presets.push_back( { m_new_preset_infos.m_name } );
 					}
 
-					m_selected_preset = &m_selected_palette->m_presets.back();
+					// After adding the new preset, we sort them.
+					std::ranges::sort( m_selected_palette->m_presets, presets_sorter );
+
+					// Then we look for or newly created preset that will not necessarily be at the end of the vector.
+					auto it_new_preset = std::ranges::find( m_selected_palette->m_presets, m_new_preset_infos.m_name, &ColorPreset::m_name );
+
+					if( it_new_preset != m_selected_palette->m_presets.end() )
+						m_selected_preset = &(*it_new_preset);
+					else
+						m_selected_preset = &m_selected_palette->m_presets.back();
 
 					// In a "Save As..." situation, we update the newly created preset with the current color selection.
 					if( m_new_preset_infos.m_create_from_current_selection )

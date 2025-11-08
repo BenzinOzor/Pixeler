@@ -16,8 +16,6 @@ namespace tinyxml2
 
 namespace PerlerMaker
 {
-	static const std::string color_preset_all{ "All" };		// The default preset containing all the colors of a palette. It is automatically added to a palette and is not in its xml file.
-
 	/************************************************************************
 	* @brief Class managing all the color palettes and their presets.
 	* It handles the color list ImGui window.

@@ -6,6 +6,7 @@
 
 #include <FZN/Tools/Tools.h>
 
+#include "Defines.h"
 #include "Utils.h"
 
 
@@ -90,6 +91,29 @@ namespace PerlerMaker
 		ColorIDs	m_colors;
 	};
 	using ColorPresets = std::vector< ColorPreset >;
+
+	/**
+	* @brief Sorting function for palettes presets. Preset "All" will always be first.
+	* @param [in] _preset_a The first preset to sort.
+	* @param [in] _preset_b The second preset to sort.
+	* @return True if _preset_a must be placed before _preset_b, false otherwise.
+	**/
+	static bool presets_sorter( const ColorPreset& _preset_a, const ColorPreset& _preset_b )
+	{
+		if( _preset_a.m_name == color_preset_all )
+			return true;
+
+		if( _preset_b.m_name == color_preset_all )
+			return false;
+
+		const std::string name_a = fzn::Tools::get_lower_string( _preset_a.m_name );
+		const std::string name_b = fzn::Tools::get_lower_string( _preset_b.m_name );
+
+		if( name_a.compare( name_b ) > 0 )
+			return false;
+
+		return true;
+	}
 
 	struct ColorPalette
 	{
