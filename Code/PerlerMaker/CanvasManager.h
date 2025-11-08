@@ -21,7 +21,7 @@ namespace PerlerMaker
 		struct PixelDesc
 		{
 			sf::Color m_base_color{ sf::Color::Black };
-			ColorInfos m_color_infos;
+			const ColorInfos* m_color_infos{ nullptr };
 			uint32_t m_quad_index{ Uint32_Max };
 			uint32_t m_pixel_index{ Uint32_Max };
 		};

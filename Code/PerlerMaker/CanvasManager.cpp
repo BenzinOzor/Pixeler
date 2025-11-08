@@ -292,7 +292,7 @@ namespace PerlerMaker
 			m_converted_pixels[ quad_index + 3 ].color = new_color;
 
 			if( auto* pixel_desc = get_pixel_desc( quad_index / 4 ) )
-				pixel_desc->m_color_infos = *color_infos;
+				pixel_desc->m_color_infos = color_infos;
 		}
 	}
 
@@ -358,7 +358,7 @@ namespace PerlerMaker
 
 		PixelDesc& pixel_desc{ m_pixels_descs[ new_pixel_index ] };
 
-		if( pixel_desc.m_color_infos.is_valid() == false )
+		if( pixel_desc.m_color_infos == nullptr || pixel_desc.m_color_infos->is_valid() == false )
 			return nullptr;
 
 		return &pixel_desc;
@@ -414,12 +414,12 @@ namespace PerlerMaker
 		if( _pixel_index >= m_pixels_descs.size() )
 			return;
 
-		if( m_pixels_descs[ _pixel_index ].m_color_infos.is_valid() == false )
+		if( m_pixels_descs[ _pixel_index ].m_color_infos == nullptr || m_pixels_descs[ _pixel_index ].m_color_infos->is_valid() == false )
 			return;
 
 		std::vector< uint32_t > treated_indexes;
 		m_hovered_area.m_pixels.clear();
-		const ColorInfos& color_to_find{ m_pixels_descs[ _pixel_index ].m_color_infos };
+		const ColorInfos* color_to_find{ m_pixels_descs[ _pixel_index ].m_color_infos };
 
 		auto check_position = [&]( this const auto& self, uint32_t _pixel_index )
 		{
@@ -431,12 +431,12 @@ namespace PerlerMaker
 
 			PixelDesc& pixel_desc{ m_pixels_descs[ _pixel_index ] };
 
-			if( pixel_desc.m_color_infos.is_valid() == false )
+			if( pixel_desc.m_color_infos == nullptr || pixel_desc.m_color_infos->is_valid() == false )
 				return;
 
 			treated_indexes.push_back( _pixel_index );
 
-			if( pixel_desc.m_color_infos == color_to_find )
+			if( *pixel_desc.m_color_infos == *color_to_find )
 				m_hovered_area.m_pixels.push_back( &pixel_desc );
 			else
 				return;
@@ -450,8 +450,6 @@ namespace PerlerMaker
 		};
 
 		check_position( _pixel_index );
-
-		return;
 	}
 
 	void CanvasManager::_compute_area_outline()
@@ -467,7 +465,7 @@ namespace PerlerMaker
 		auto add_neighbor_points = [&]( const PixelDesc& _pixel, Direction _direction )
 		{
 			PixelDesc* neighbor_pixel{ _get_pixel_desc_in_direction( _pixel, _direction ) };
-			if( neighbor_pixel == nullptr || _pixel.m_color_infos != neighbor_pixel->m_color_infos )
+			if( neighbor_pixel == nullptr || *_pixel.m_color_infos != *neighbor_pixel->m_color_infos )
 			{
 				const PixelPosition pixel_position{ _get_2D_position( _pixel.m_pixel_index ) };
 				sf::Vector2f point_A{ m_sprite.getPosition() + m_image_offest };
@@ -613,9 +611,9 @@ namespace PerlerMaker
 			return;
 		}
 
-		const ColorInfos& color{ m_pixels_descs[ pixel_index ].m_color_infos };
+		const ColorInfos* color{ m_pixels_descs[ pixel_index ].m_color_infos };
 
-		if( color.is_valid() == false )
+		if( color == nullptr || color->is_valid() == false )
 		{
 			m_hovered_area.Reset();
 			return;
@@ -638,7 +636,7 @@ namespace PerlerMaker
 		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 8, 8 } );
 		ImGui::BeginTooltip();
 
-		Utils::color_infos_tooltip_common( color );
+		Utils::color_infos_tooltip_common( *color );
 
 		ImGui::Separator();
 		ImGui::Text( "Area count:" );
@@ -647,7 +645,7 @@ namespace PerlerMaker
 
 		ImGui::Text( "Total count:" );
 		ImGui::SameLine();
-		ImGui_fzn::bold_text( "%d", color.m_count );
+		ImGui_fzn::bold_text( "%d", color->m_count );
 
 		ImGui::Separator();
 		ImGui::Text( "Original color" );
