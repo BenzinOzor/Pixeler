@@ -92,6 +92,22 @@ namespace PerlerMaker
 	};
 	using ColorPresets = std::vector< ColorPreset >;
 
+	struct ColorPalette
+	{
+		bool is_using_IDs() const { return m_nb_digits_in_IDs > 0; }
+		bool is_using_names() const { return m_using_names; }
+
+		std::string			m_name;
+		std::string			m_file_path;
+		ColorInfosVector	m_colors;
+		ColorPresets		m_presets;
+
+		uint8_t				m_nb_digits_in_IDs{ 0 };
+		bool				m_using_names{ true };
+	};
+	using ColorPalettes = std::vector< ColorPalette >;
+
+
 	/**
 	* @brief Sorting function for palettes presets. Preset "All" will always be first.
 	* @param [in] _preset_a The first preset to sort.
@@ -115,18 +131,20 @@ namespace PerlerMaker
 		return true;
 	}
 
-	struct ColorPalette
+	/**
+	* @brief Sorting function for palettes.
+	* @param [in] _palette_a The first palette to sort.
+	* @param [in] _palette_b The second palette to sort.
+	* @return True if _palette_a must be placed before _palette_b, false otherwise.
+	**/
+	static bool palettes_sorter( const ColorPalette& _palette_a, const ColorPalette& _palette_b )
 	{
-		bool is_using_IDs() const { return m_nb_digits_in_IDs > 0; }
-		bool is_using_names() const { return m_using_names; }
+		const std::string name_a = fzn::Tools::get_lower_string( _palette_a.m_name );
+		const std::string name_b = fzn::Tools::get_lower_string( _palette_b.m_name );
 
-		std::string			m_name;
-		std::string			m_file_path;
-		ColorInfosVector	m_colors;
-		ColorPresets		m_presets;
+		if( name_a.compare( name_b ) > 0 )
+			return false;
 
-		uint8_t				m_nb_digits_in_IDs{ 0 };
-		bool				m_using_names{ true };
-	};
-	using ColorPalettes = std::vector< ColorPalette >;
+		return true;
+	}
 }

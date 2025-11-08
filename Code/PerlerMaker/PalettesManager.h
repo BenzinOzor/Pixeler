@@ -178,6 +178,13 @@ namespace PerlerMaker
 		void _select_preset( ColorPreset* _preset = nullptr );
 
 		/**
+		* @brief Look for the given preset in the in the current palette.
+		* @param _preset The name of the preset to find.
+		* @return A pointer to the right preset if found, nullptr otherwise.
+		**/
+		ColorPreset* _find_preset( std::string_view _preset );
+
+		/**
 		* @brief Select a preset from the given name.
 		* @param _preset_name The name of the preset to select.
 		**/

@@ -220,6 +220,8 @@ namespace PerlerMaker
 		if( m_palettes.empty() )
 			return;
 
+		std::ranges::sort( m_palettes, palettes_sorter );
+
 		m_selected_palette = &m_palettes.front();
 		_select_default_preset();
 	}
@@ -572,6 +574,22 @@ namespace PerlerMaker
 
 		if( auto it_preset = std::ranges::find( m_selected_palette->m_presets, _preset_name, &ColorPreset::m_name ); it_preset != m_selected_palette->m_presets.end() )
 			_select_preset( &(*it_preset) );
+	}
+
+	/**
+	* @brief Look for the given preset in the in the current palette.
+	* @param _preset The name of the preset to find.
+	* @return A pointer to the right preset if found, nullptr otherwise.
+	**/
+	ColorPreset* PalettesManager::_find_preset( std::string_view _preset )
+	{
+		if( m_selected_palette == nullptr )
+			return nullptr;
+
+		if( auto it_preset = std::ranges::find( m_selected_palette->m_presets, _preset, &ColorPreset::m_name ); it_preset != m_selected_palette->m_presets.end() )
+			return &( *it_preset );
+
+		return nullptr;
 	}
 
 	/**

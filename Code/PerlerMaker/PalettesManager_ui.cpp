@@ -786,29 +786,48 @@ namespace PerlerMaker
 						m_new_palette_infos.m_file_name = m_new_palette_infos.m_name;
 
 					m_palettes.push_back( { m_new_palette_infos.m_name } );
-					m_selected_palette = &m_palettes.back();
 
-					if( m_new_palette_infos.m_source_palette != nullptr )
+					// After adding the new palette, we sort them.
+					std::ranges::sort( m_palettes, palettes_sorter );
+					// Then we look for or newly created palette that will not necessarily be at the end of the vector.
+					m_selected_palette = _find_palette( m_new_palette_infos.m_name );
+
+					if( m_selected_palette != nullptr )
 					{
-						m_selected_palette->m_colors			= m_new_palette_infos.m_source_palette->m_colors;
-						m_selected_palette->m_presets			= m_new_palette_infos.m_source_palette->m_presets;
-						m_selected_palette->m_nb_digits_in_IDs	= m_new_palette_infos.m_source_palette->m_nb_digits_in_IDs;
-						m_selected_palette->m_using_names		= m_new_palette_infos.m_source_palette->m_using_names;
+						if( m_new_palette_infos.m_source_palette != nullptr )
+						{
+							m_selected_palette->m_colors = m_new_palette_infos.m_source_palette->m_colors;
+							m_selected_palette->m_presets = m_new_palette_infos.m_source_palette->m_presets;
+							m_selected_palette->m_nb_digits_in_IDs = m_new_palette_infos.m_source_palette->m_nb_digits_in_IDs;
+							m_selected_palette->m_using_names = m_new_palette_infos.m_source_palette->m_using_names;
+						}
+						else
+						{
+							m_selected_palette->m_presets.push_back( { color_preset_all } );
+						}
+
+						m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
+
+						if( m_new_palette_infos.m_restore_backup_palette )
+							_restore_backup_palette();
+						else if( m_new_palette_infos.m_set_new_palette_as_backup )
+							m_backup_palette = m_palettes.back();
+
+						_select_palette( *m_selected_palette );
+						_save_palette();
+
+						m_new_palette = false;
+						m_new_palette_infos = NewPaletteInfos{};
 					}
 					else
 					{
-						m_selected_palette->m_presets.push_back( { color_preset_all } );
+						m_selected_palette = &m_palettes.back();
+
+						if( m_new_palette_infos.m_restore_backup_palette )
+							_restore_backup_palette();
+
+						_select_palette( *m_selected_palette );
 					}
-
-					m_selected_palette->m_file_path = m_new_palette_infos.m_file_name + ".xml";
-
-					if( m_new_palette_infos.m_restore_backup_palette )
-						_restore_backup_palette();
-					else if( m_new_palette_infos.m_set_new_palette_as_backup )
-						m_backup_palette = m_palettes.back();
-
-					_select_palette( *m_selected_palette );
-					_save_palette();
 
 					m_new_palette = false;
 					m_new_palette_infos = NewPaletteInfos{};
@@ -877,12 +896,7 @@ namespace PerlerMaker
 					std::ranges::sort( m_selected_palette->m_presets, presets_sorter );
 
 					// Then we look for or newly created preset that will not necessarily be at the end of the vector.
-					auto it_new_preset = std::ranges::find( m_selected_palette->m_presets, m_new_preset_infos.m_name, &ColorPreset::m_name );
-
-					if( it_new_preset != m_selected_palette->m_presets.end() )
-						m_selected_preset = &(*it_new_preset);
-					else
-						m_selected_preset = &m_selected_palette->m_presets.back();
+					m_selected_preset = _find_preset( m_new_preset_infos.m_name );
 
 					// In a "Save As..." situation, we update the newly created preset with the current color selection.
 					if( m_new_preset_infos.m_create_from_current_selection )
