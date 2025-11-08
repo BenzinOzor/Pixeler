@@ -220,11 +220,14 @@ namespace PerlerMaker
 
 			if( m_palette_edition )
 			{
+				ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_red );
 				if( ImGui::MenuItem( "Cancel Edition" ) )
 				{
 					_restore_backup_palette();
 					set_edition( false );
 				}
+				ImGui::PopStyleColor();
+				ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_green );
 				if( ImGui::MenuItem( "Save" ) )
 				{
 					set_edition( false );
@@ -237,6 +240,7 @@ namespace PerlerMaker
 					m_new_palette_infos.m_restore_backup_palette = true;
 					set_edition( false );
 				}
+				ImGui::PopStyleColor();
 			}
 			else
 			{
@@ -260,7 +264,7 @@ namespace PerlerMaker
 						set_edition( true );
 					}
 					ImGui::Separator();
-					ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::light_red );
+					ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_red );
 					if( ImGui::MenuItem( "Delete" ) )
 					{
 						_delete_palette();
@@ -395,8 +399,15 @@ namespace PerlerMaker
 
 			// The table will take all the available height in the window unless we're in edition mode because we want to leave room for the color addition button at the bottom of the window.
 			ImVec2 table_size{ 0.f, ImGui::GetContentRegionAvail().y };
-			if( m_palette_edition )
+
+			// Displaying the "Add New Color" button if we're editing the palette, or if there are no colors to make more visible the fact that palettes are editable.
+			const bool new_color_button = m_palette_edition || m_selected_palette->m_colors.empty();
+
+			if( new_color_button )
 				table_size.y -= ImGui::GetFrameHeightWithSpacing();
+
+			if( m_palette_edition )
+				table_size.y -= 2.f * ImGui::GetFrameHeightWithSpacing();
 
 			if( ImGui::BeginChild( "color_table", table_size ) )
 			{
@@ -415,12 +426,40 @@ namespace PerlerMaker
 				ImGui::EndChild();
 			}
 
-			if( m_palette_edition )
+			if( new_color_button )
 			{
 				if( ImGui::Button( "Add New Color", { ImGui::GetContentRegionAvail().x, 0.f } ) )
-					m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
+				{
+					if( m_palette_edition == false )
+						m_palette_edition = true;
 
-				ImGui::SameLine();
+					m_edited_color = ColorInfos{ "", -1, ImGui_fzn::color::black };
+				}
+			}
+
+			if( m_palette_edition )
+			{
+				ImGui::PushStyleColor( ImGuiCol_Button, ImGui_fzn::color::dark_green );
+				ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImGui_fzn::color::green );
+				ImGui::PushStyleColor( ImGuiCol_ButtonActive, ImGui_fzn::color::light_green );
+				if( ImGui::Button( "Save", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				{
+					m_palette_edition = false;
+					_reset_color_to_edit();
+					m_backup_palette = ColorPalette{};
+					_save_palette();
+				}
+				ImGui::PopStyleColor( 3 );
+				ImGui::PushStyleColor( ImGuiCol_Button, ImGui_fzn::color::dark_red );
+				ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImGui_fzn::color::red );
+				ImGui::PushStyleColor( ImGuiCol_ButtonActive, ImGui_fzn::color::light_red );
+				if( ImGui::Button( "Cancel Edition", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				{
+					_restore_backup_palette();
+					m_palette_edition = false;
+					_reset_color_to_edit();
+				}
+				ImGui::PopStyleColor(3);
 			}
 		}
 
