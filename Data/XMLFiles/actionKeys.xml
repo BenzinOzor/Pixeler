@@ -5,4 +5,7 @@
 	<Action Name="Show Original Sprite">
 		 <Input Type="Keyboard" Map="O"/> 
 	</Action>
+	<Action Name="Show Secondary Highlight">
+		<Input Type="Keyboard" Map="H"/>
+	</Action>
 </Actions>

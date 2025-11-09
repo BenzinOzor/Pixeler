@@ -557,7 +557,6 @@ namespace PerlerMaker
 			}
 		};
 
-		ImVec4 area_color{ options_datas.m_area_highlight_color };
 		uint32_t area_index{ 0 };
 
 		if( m_hovered_color.m_first_area_hovered )
@@ -576,12 +575,11 @@ namespace PerlerMaker
 			if( m_hovered_color.m_hovered_area_points.getVertexCount() > 0 )
 			{
 				m_hovered_color.m_hovered_area_line.set_thickness( options_datas.m_area_highlight_thickness );
-				m_hovered_color.m_hovered_area_line.set_color( area_color );
+				m_hovered_color.m_hovered_area_line.set_color( options_datas.m_area_highlight_color );
 				m_hovered_color.m_hovered_area_line.from_vertex_array( m_hovered_color.m_hovered_area_points );
 			}
 
 			++area_index;
-			area_color = ImGui_fzn::color_diff_alpha( options_datas.m_area_highlight_color, options_datas.m_area_highlight_color.w * 0.5f );
 		}
 
 		for( ; area_index < m_hovered_color.m_pixel_areas.size(); ++area_index )
@@ -599,8 +597,8 @@ namespace PerlerMaker
 
 			if( m_hovered_color.m_colored_area_points.getVertexCount() > 0 )
 			{
-				m_hovered_color.m_colored_area_line.set_thickness( options_datas.m_area_highlight_thickness );
-				m_hovered_color.m_colored_area_line.set_color( area_color );
+				m_hovered_color.m_colored_area_line.set_thickness( options_datas.m_area_secondary_highlight_thickness );
+				m_hovered_color.m_colored_area_line.set_color( options_datas.m_area_secondary_highlight_color );
 				m_hovered_color.m_colored_area_line.from_vertex_array( m_hovered_color.m_colored_area_points );
 			}
 		}
@@ -663,7 +661,7 @@ namespace PerlerMaker
 			}
 		}
 
-		if( m_hovered_color.m_colored_area_line.is_empty() == false )
+		if( options_datas.m_show_secondary_highlight && m_hovered_color.m_colored_area_line.is_empty() == false )
 			m_render_texture.draw( m_hovered_color.m_colored_area_line );
 
 		if( m_hovered_color.m_hovered_area_line.is_empty() == false )

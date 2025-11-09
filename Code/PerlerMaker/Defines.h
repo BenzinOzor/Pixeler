@@ -5,14 +5,15 @@
 
 namespace PerlerMaker
 {
-	static const std::string		color_preset_all			{ "All" };		// The default preset containing all the colors of a palette. It is automatically added to a palette and is not in its xml file.
+	static const std::string		color_preset_all				{ "All" };		// The default preset containing all the colors of a palette. It is automatically added to a palette and is not in its xml file.
 
-	static constexpr const char*	Action_ShowGrid				{ "Show Grid" };
-	static constexpr const char*	Action_ShowOriginalSprite	{ "Show Original Sprite" };
+	static constexpr const char*	Action_ShowGrid					{ "Show Grid" };
+	static constexpr const char*	Action_ShowOriginalSprite		{ "Show Original Sprite" };
+	static constexpr const char*	Action_ShowSecondaryHighlight	{ "Show Secondary Highlight" };
 
-	static constexpr const char*	Tooltip_ShowGrid			{ "Display a grid over the sprite to visually separate pixels" };
-	static constexpr const char*	Tooltip_ShowOriginal		{ "Display the original sprite on top of the palette converted one" };
-	static constexpr const char*	Tooltip_OriginalOpacity		{ "Change the opacity of the original sprite" };
+	static constexpr const char*	Tooltip_ShowGrid				{ "Display a grid over the sprite to visually separate pixels" };
+	static constexpr const char*	Tooltip_ShowOriginal			{ "Display the original sprite on top of the palette converted one" };
+	static constexpr const char*	Tooltip_OriginalOpacity			{ "Change the opacity of the original sprite" };
 
 	enum ColorChannel
 	{

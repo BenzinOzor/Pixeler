@@ -89,7 +89,7 @@ namespace PerlerMaker
 			return _widget_edited;
 		};
 
-		ImGui::SetNextWindowSize( { 350.f, 0.f } );
+		ImGui::SetNextWindowSize( { 400.f, 0.f } );
 
 		if( ImGui::Begin( "Options", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse ) )
 		{
@@ -126,6 +126,25 @@ namespace PerlerMaker
 
 				if( ImGui::IsItemHovered() )
 					ImGui::SetTooltip( "Thickness will be updated when a new area is hovered" );
+
+				ImGui::TableNextRow();
+				_first_column_text( "Show secondary highlight" );
+				second_column_widget( ImGui::Checkbox( "##Show secondary highlight", &m_options_datas.m_show_secondary_highlight ) );
+				ImGui::SameLine();
+				ImGui_fzn::helper_simple_tooltip( "When hovering an area with the mouse, highlight all other areas of the same color." );
+
+				ImGui::TableNextRow();
+				_first_column_text( "Secondary color" );
+				second_column_widget( ImGui::ColorEdit4( "##SecondaryColor", &m_options_datas.m_area_secondary_highlight_color.x, ImGuiColorEditFlags_NoInputs ) );
+
+				ImGui::TableNextRow();
+				_first_column_text( "Secondary thickness" );
+				ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+				if( second_column_widget( ImGui::SliderFloat( "##SecondaryThickness", &m_options_datas.m_area_secondary_highlight_thickness, 1.f, 20.f, "%.0f" ) ) )
+				{
+					if( m_options_datas.m_area_secondary_highlight_thickness < 1.f )
+						m_options_datas.m_area_secondary_highlight_thickness = 1.f;
+				}
 
 				ImGui::EndTable();
 			}
@@ -265,10 +284,13 @@ namespace PerlerMaker
 		load_color( "canvas_color", m_options_datas.m_canvas_background_color );
 		load_color( "area_highlight_color", m_options_datas.m_area_highlight_color );
 		load_color( "grid_color", m_options_datas.m_grid_color );
+		load_color( "area_secondary_highlight_color", m_options_datas.m_area_secondary_highlight_color );
 
 		m_options_datas.m_area_highlight_thickness = root[ "area_highlight_thickness" ].asFloat();
 		m_options_datas.m_grid_same_color_as_canvas = root[ "grid_same_color_as_canvas" ].asBool();
 		m_options_datas.m_show_grid = root[ "show_grid" ].asBool();
+		m_options_datas.m_show_secondary_highlight = root[ "show_secondary_highlight" ].asBool();
+		m_options_datas.m_area_secondary_highlight_thickness = root[ "area_secondary_highlight_thickness" ].asFloat();
 
 		m_options_datas.m_bindings = g_pFZN_InputMgr->GetActionKeys();
 	}
@@ -291,10 +313,13 @@ namespace PerlerMaker
 		save_color( "canvas_color", m_options_datas.m_canvas_background_color, false );
 		save_color( "area_highlight_color", m_options_datas.m_area_highlight_color );
 		save_color( "grid_color", m_options_datas.m_grid_color, false );
+		save_color( "area_secondary_highlight_color", m_options_datas.m_area_secondary_highlight_color );
 
 		root[ "area_highlight_thickness" ] = m_options_datas.m_area_highlight_thickness;
 		root[ "grid_same_color_as_canvas" ] = m_options_datas.m_grid_same_color_as_canvas;
 		root[ "show_grid" ] = m_options_datas.m_show_grid;
+		root[ "show_secondary_highlight" ] = m_options_datas.m_show_secondary_highlight;
+		root[ "area_secondary_highlight_thickness" ] = m_options_datas.m_area_secondary_highlight_thickness;
 
 		file << json_writer.write( root );
 
@@ -331,8 +356,9 @@ namespace PerlerMaker
 
 	void Options::_handle_actions()
 	{
-		check_action_and_set_option( Action_ShowGrid,			m_options_datas.m_show_grid );
+		check_action_and_set_option( Action_ShowGrid, m_options_datas.m_show_grid );
 		check_action_and_set_option( Action_ShowOriginalSprite, m_options_datas.m_show_original );
+		check_action_and_set_option( Action_ShowSecondaryHighlight, m_options_datas.m_show_secondary_highlight );
 	}
 
 } // namespace PerlerMaker
