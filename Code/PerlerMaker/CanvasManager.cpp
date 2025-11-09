@@ -120,6 +120,27 @@ namespace PerlerMaker
 		}
 	}
 
+	/**
+	* @brief Retrieve all same colored pixels as the given color.
+	* @param _area_color The color to find in the pixel descs array.
+	**/
+	void CanvasManager::compute_pixel_area( const ColorInfos& _area_color )
+	{
+		// First, we check if we already have hovered pixels and if they are the same color as the given one.
+		// If that's the case, we don't need to compute areas again.
+		if( m_hovered_color.m_pixel_areas.empty() == false && m_hovered_color.m_pixel_areas.front().empty() == false )
+		{
+			// Separating the tests for lisibility
+			if( *m_hovered_color.m_pixel_areas.front().front()->m_color_infos == _area_color )
+				return;
+		}
+		
+		std::vector< uint32_t > treated_indexes;
+		m_hovered_color.reset();
+
+		_compute_pixel_area( _area_color, treated_indexes );
+	}
+
 	//································································
 	// Load the base vertex array from the chosen image
 	//································································
@@ -437,7 +458,10 @@ namespace PerlerMaker
 		_get_colored_pixels_in_area( _get_1D_index( { pixel_position.x + 1	, pixel_position.y } ),			_area_color, _pixel_area, _treated_indexes );		// Right
 	}
 
-	// pixel index from hovered area
+	/**
+	* @brief Retrieve all same colored pixels as the one at the given index.
+	* @param _pixel_index Index in the pixel descs array.
+	**/
 	void CanvasManager::_compute_pixel_area( uint32_t _pixel_index )
 	{
 		// reset hovered color
@@ -466,18 +490,12 @@ namespace PerlerMaker
 		_compute_pixel_area( *color_to_find, treated_indexes );
 	}
 
-	// area color from color list
-	void CanvasManager::_compute_pixel_area( const ColorInfos& _area_color )
-	{
-		// reset hovered color
-		// create treated indexes
-		std::vector< uint32_t > treated_indexes;
-		m_hovered_color.reset();
-
-		_compute_pixel_area( _area_color, treated_indexes );
-	}
-
-	// area color from color list
+	/**
+	* @brief Retrieve all same colored pixels as the given color.
+	* @warning This function is not meant to be called first, it is called by the two others of the same name that set up some variables first.
+	* @param _area_color The color to find in the pixel descs array.
+	* @param _treated_indexes An array containing all the previously checked pixel indexes.
+	**/
 	void CanvasManager::_compute_pixel_area( const ColorInfos& _area_color, std::vector< uint32_t >& _treated_indexes )
 	{
 		// for loop indexes 0 > size
@@ -557,6 +575,7 @@ namespace PerlerMaker
 			}
 		};
 
+		ImVec4 area_color{ options_datas.m_area_highlight_color };
 		uint32_t area_index{ 0 };
 
 		if( m_hovered_color.m_first_area_hovered )
@@ -575,11 +594,12 @@ namespace PerlerMaker
 			if( m_hovered_color.m_hovered_area_points.getVertexCount() > 0 )
 			{
 				m_hovered_color.m_hovered_area_line.set_thickness( options_datas.m_area_highlight_thickness );
-				m_hovered_color.m_hovered_area_line.set_color( options_datas.m_area_highlight_color );
+				m_hovered_color.m_hovered_area_line.set_color( area_color );
 				m_hovered_color.m_hovered_area_line.from_vertex_array( m_hovered_color.m_hovered_area_points );
 			}
 
 			++area_index;
+			area_color = options_datas.m_area_secondary_highlight_color;
 		}
 
 		for( ; area_index < m_hovered_color.m_pixel_areas.size(); ++area_index )
@@ -598,7 +618,7 @@ namespace PerlerMaker
 			if( m_hovered_color.m_colored_area_points.getVertexCount() > 0 )
 			{
 				m_hovered_color.m_colored_area_line.set_thickness( options_datas.m_area_secondary_highlight_thickness );
-				m_hovered_color.m_colored_area_line.set_color( options_datas.m_area_secondary_highlight_color );
+				m_hovered_color.m_colored_area_line.set_color( area_color );
 				m_hovered_color.m_colored_area_line.from_vertex_array( m_hovered_color.m_colored_area_points );
 			}
 		}
@@ -661,7 +681,7 @@ namespace PerlerMaker
 			}
 		}
 
-		if( options_datas.m_show_secondary_highlight && m_hovered_color.m_colored_area_line.is_empty() == false )
+		if( ( options_datas.m_show_secondary_highlight || m_hovered_color.m_first_area_hovered == false ) && m_hovered_color.m_colored_area_line.is_empty() == false )
 			m_render_texture.draw( m_hovered_color.m_colored_area_line );
 
 		if( m_hovered_color.m_hovered_area_line.is_empty() == false )

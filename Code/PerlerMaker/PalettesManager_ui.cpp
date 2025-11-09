@@ -558,7 +558,9 @@ namespace PerlerMaker
 			if( _color.m_count >= 0 )
 			{
 				ImGui::Separator();
-				ImGui::Text( "Total count: %d", _color.m_count );
+				ImGui::Text( "Total count:" );
+				ImGui::SameLine();
+				ImGui_fzn::bold_text( "%d", _color.m_count );
 			}
 			ImGui::Separator();
 			if( m_palette_edition )
@@ -617,6 +619,10 @@ namespace PerlerMaker
 			current_table->RowBgColor[ 1 ] = table_row_selected;
 
 		ImGui::PopID();
+
+		// Outline the color if used in the convertion
+		if( _color.m_count > 0 && row_hovered )
+			g_perler_maker->get_canvas_manager().compute_pixel_area( _color );
 
 		return true;
 	}

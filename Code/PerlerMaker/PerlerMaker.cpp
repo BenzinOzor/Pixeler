@@ -97,8 +97,11 @@ namespace PerlerMaker
 				if( ImGui::MenuItem( "Load Image" ) )
 					_load_image();
 
+				ImGui::Separator();
+				ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_red );
 				if( ImGui::MenuItem( "Restore Base Palettes Default Values" ) )
 					m_palettes_manager.reset_base_palettes();
+				ImGui::PopStyleColor();
 
 				if( ImGui::IsItemHovered() )
 					ImGui::SetTooltip( "Restore default colors and presets of palettes located in '%s'.\nDoesn't affect custom palettes.", std::string{ g_pFZN_Core->GetSaveFolderPath() + "/Palettes/Base" }.c_str() );

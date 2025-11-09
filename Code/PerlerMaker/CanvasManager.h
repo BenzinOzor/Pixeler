@@ -18,36 +18,24 @@ namespace PerlerMaker
 
 	class CanvasManager
 	{
+		/************************************************************************
+		* @brief The informations available on a pixel displayed on the canvas.
+		************************************************************************/
 		struct PixelDesc
 		{
-			sf::Color m_base_color{ sf::Color::Black };
-			const ColorInfos* m_color_infos{ nullptr };
-			uint32_t m_quad_index{ Uint32_Max };
-			uint32_t m_pixel_index{ Uint32_Max };
+			sf::Color			m_base_color{ sf::Color::Black };	// The color of the pixel before the convertion.
+			const ColorInfos*	m_color_infos{ nullptr };			// The informations on the new color given to the pixel. (Id, value, count, etc...)
+			uint32_t			m_quad_index{ Uint32_Max };			// The index of the quad in the sprite (only the created pixels, empty spaces don't have index, 0 is the first drawn pixel)
+			uint32_t			m_pixel_index{ Uint32_Max };		// The overall index of the pixel, including empty spaces. 0 is the top left most pixel in the image.
 		};
-		using PixelDescs = std::vector< PixelDesc >;
-		using PixelDescsPtr = std::vector< PixelDesc* >;
-		using PixelAreas = std::vector< PixelDescsPtr >;
+		using PixelDescs = std::vector< PixelDesc >;		// A vector containing pixel descriptions
+		using PixelDescsPtr = std::vector< PixelDesc* >;	// A vector containing pointers to pixel descriptions. Used to represent areas of pixels.
+		using PixelAreas = std::vector< PixelDescsPtr >;	// A vector of pixel areas.
 
-		/*struct PixelArea
-		{
-			PixelArea()
-			{
-				m_outline_points.setPrimitiveType( sf::Lines );
-			}
 
-			void Reset()
-			{
-				m_outline_points.clear();
-				m_pixels.clear();
-				m_line.clear();
-			}
-
-			sf::VertexArray m_outline_points;
-			fzn::Line		m_line;
-			PixelDescsPtr	m_pixels;
-		};*/
-
+		/************************************************************************
+		* @brief Computed informations about the pixel area hovered by the mouse on the canvas or in the colors list.
+		************************************************************************/
 		struct HoveredColor
 		{
 			HoveredColor()
@@ -56,6 +44,9 @@ namespace PerlerMaker
 				m_colored_area_points.setPrimitiveType( sf::Lines );
 			}
 
+			/**
+			* @brief Clear all detected pixels and vertex arrays
+			**/
 			void reset()
 			{
 				m_pixel_areas.clear();
@@ -72,7 +63,7 @@ namespace PerlerMaker
 				m_colored_area_line.clear();
 			}
 
-			PixelAreas		m_pixel_areas;
+			PixelAreas		m_pixel_areas;					// A list of pixel areas the same color as the one hovered by the mouse.
 			bool			m_first_area_hovered{ false };	// If true, the first area in the vector represents the one hovered by the mouse.
 
 			// Points and line of the canvas area hovered by the mouse
@@ -95,6 +86,12 @@ namespace PerlerMaker
 		void load_texture( std::string_view _path );
 
 		void set_original_sprite_opacity( float _opacity );
+
+		/**
+		* @brief Retrieve all same colored pixels as the given color.
+		* @param _area_color The color to find in the pixel descs array.
+		**/
+		void compute_pixel_area( const ColorInfos& _area_color );
 
 	private:
 		//·································································································································································
@@ -144,21 +141,20 @@ namespace PerlerMaker
 
 		void _get_colored_pixels_in_area( uint32_t _pixel_index, const ColorInfos& _area_color, PixelDescsPtr& _pixel_area, std::vector< uint32_t >& _treated_indexes );
 
-		// pixel index from hovered area
+		/**
+		* @brief Retrieve all same colored pixels as the one at the given index.
+		* @param _pixel_index Index in the pixel descs array.
+		**/
 		void _compute_pixel_area( uint32_t _pixel_index );
 
-		// area color from color list
-		void _compute_pixel_area( const ColorInfos& _area_color );
-
-		// area color from color list
+		/**
+		* @brief Retrieve all same colored pixels as the given color.
+		* @warning This function is not meant to be called first, it is called by the two others of the same name that set up some variables first.
+		* @param _area_color The color to find in the pixel descs array.
+		* @param _treated_indexes An array containing all the previously checked pixel indexes.
+		**/
 		void _compute_pixel_area( const ColorInfos& _area_color, std::vector< uint32_t >& _treated_indexes );
 
-		/**
-		* @brief Get all the same colored pixels in the area around the given index.
-		* @param _pixel_index The pixel index around which we will look for same colored pixels.
-		* @param _is_mouse_hovered Indicates if the given pixel index is hovered by the mouse or not. If so, the hovered area pointer will be set accordingly.
-		**/
-		//void _compute_pixel_area( uint32_t _pixel_index, bool _is_mouse_hovered );
 		void _compute_area_outline();
 		bool _is_pixel_in_current_area( uint32_t _pixel_index ) const;
 
