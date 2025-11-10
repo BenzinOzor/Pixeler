@@ -7,13 +7,13 @@
 #include "CanvasManager.h"
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
-	class CPerlerMaker
+	class CPixeler
 	{
 	public:
-		CPerlerMaker();
-		~CPerlerMaker();
+		CPixeler();
+		~CPixeler();
 
 		void display();
 
@@ -35,4 +35,4 @@ namespace PerlerMaker
 	};
 };
 
-extern PerlerMaker::CPerlerMaker* g_perler_maker;
+extern Pixeler::CPixeler* g_pixeler;

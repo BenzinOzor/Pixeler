@@ -10,7 +10,7 @@
 #include "Utils.h"
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	struct ColorID
 	{

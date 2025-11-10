@@ -3,7 +3,7 @@
 #include <FZN/Tools/Tools.h>
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	static const std::string		color_preset_all				{ "All" };		// The default preset containing all the colors of a palette. It is automatically added to a palette and is not in its xml file.
 
@@ -43,4 +43,4 @@ namespace PerlerMaker
 		uint32_t x{ 0 };
 		uint32_t y{ 0 };
 	};
-} // namsepace PerlerMaker
+} // namsepace Pixeler

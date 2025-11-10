@@ -9,7 +9,7 @@ namespace sf
 
 class ImColor;
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	struct ColorInfos;
 	struct ColorPalette;
@@ -35,4 +35,4 @@ namespace PerlerMaker
 
 		void window_bottom_table( uint8_t _nb_items, std::function<void(void)> _table_content_fct );
 	} // namespace Utils
-} // namespace PerlerMaker
+} // namespace Pixeler

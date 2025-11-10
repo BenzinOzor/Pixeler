@@ -6,9 +6,9 @@
 
 #include "PalettesManager.h"
 #include "Utils.h"
-#include "PerlerMaker.h"
+#include "Pixeler.h"
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	/************************************************************************
 	* Custom ImGui colors for various elements of the window.
@@ -622,7 +622,7 @@ namespace PerlerMaker
 
 		// Outline the color if used in the convertion
 		if( _color.m_count > 0 && row_hovered )
-			g_perler_maker->get_canvas_manager().compute_pixel_area( _color );
+			g_pixeler->get_canvas_manager().compute_pixel_area( _color );
 
 		return true;
 	}

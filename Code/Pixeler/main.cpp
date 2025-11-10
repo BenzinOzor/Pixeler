@@ -10,11 +10,11 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "PerlerMaker.h"
+#include "Pixeler.h"
 
 int main()
 {
-	fzn::FazonCore::ProjectDesc desc{ "Perler Maker", FZNProjectType::Application };
+	fzn::FazonCore::ProjectDesc desc{ "Pixeler", FZNProjectType::Application };
 	fzn::Tools::MaskRaiseFlag( desc.m_uModules, fzn::FazonCore::CoreModuleFlags_InputModule );
 
 	fzn::FazonCore::CreateInstance( desc );
@@ -36,7 +36,7 @@ int main()
 	
 	g_pFZN_WindowMgr->SetIcon( DATAPATH( "Misc/fzn.png" ) );
 
-	auto perler_maker = PerlerMaker::CPerlerMaker{};
+	auto perler_maker = Pixeler::CPixeler{};
 
 	//Game loop (add callbacks to your functions so they can be called in there)
 	g_pFZN_Core->GameLoop();

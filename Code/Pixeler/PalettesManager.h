@@ -14,7 +14,7 @@ namespace tinyxml2
 }
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	/************************************************************************
 	* @brief Class managing all the color palettes and their presets.
@@ -344,4 +344,4 @@ namespace PerlerMaker
 		NewPresetInfos		m_new_preset_infos;						// Informations needed for preset creation.
 		float				m_ID_column_width{ 0.f };				// The width in pixels of the color ID (number) in the color list table. Calculated on palette change.
 	};
-} // namespace PerlerMaker
+} // namespace Pixeler

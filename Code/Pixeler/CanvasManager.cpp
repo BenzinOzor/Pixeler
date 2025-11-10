@@ -8,11 +8,11 @@
 #include <FZN/Tools/Logging.h>
 
 #include "CanvasManager.h"
-#include "PerlerMaker.h"
+#include "Pixeler.h"
 #include "Utils.h"
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	CanvasManager::CanvasManager()
 	{
@@ -67,7 +67,7 @@ namespace PerlerMaker
 
 	void CanvasManager::update()
 	{
-		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		auto& options_datas{ g_pixeler->get_options().get_options_datas() };
 		auto& canvas_bg_color{ options_datas.m_canvas_background_color };
 		ImGui::PushStyleColor( ImGuiCol_ChildBg, canvas_bg_color );
 		ImGui::PushStyleColor( ImGuiCol_WindowBg, canvas_bg_color );
@@ -277,7 +277,7 @@ namespace PerlerMaker
 
 		m_pixel_grid.clear();
 
-		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		auto& options_datas{ g_pixeler->get_options().get_options_datas() };
 		auto& canvas_bg_color{ sf::Color::Green };
 		float grid_position = m_image_offest.x + m_zoom_level;
 
@@ -304,7 +304,7 @@ namespace PerlerMaker
 	//································································
 	void CanvasManager::_convert_image_colors()
 	{
-		const PalettesManager& palettes_manager{ g_perler_maker->get_palettes_manager() };
+		const PalettesManager& palettes_manager{ g_pixeler->get_palettes_manager() };
 
 		for( int quad_index{ 0 }; quad_index < m_base_pixels.getVertexCount(); quad_index += 4 )
 		{
@@ -353,22 +353,22 @@ namespace PerlerMaker
 
 		switch( _direction )
 		{
-			case PerlerMaker::Direction::up:
+			case Pixeler::Direction::up:
 			{
 				new_pixel_index = _get_1D_index( { pixel_position.x, pixel_position.y - 1 } );
 				break;
 			}
-			case PerlerMaker::Direction::down:
+			case Pixeler::Direction::down:
 			{
 				new_pixel_index = _get_1D_index( { pixel_position.x, pixel_position.y + 1 } );
 				break;
 			}
-			case PerlerMaker::Direction::left:
+			case Pixeler::Direction::left:
 			{
 				new_pixel_index = _get_1D_index( { pixel_position.x - 1, pixel_position.y } );
 				break;
 			}
-			case PerlerMaker::Direction::right:
+			case Pixeler::Direction::right:
 			{
 				new_pixel_index = _get_1D_index( { pixel_position.x + 1, pixel_position.y } );
 				break;
@@ -523,7 +523,7 @@ namespace PerlerMaker
 		if( m_hovered_color.m_pixel_areas.empty() )
 			return;
 
-		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		auto& options_datas{ g_pixeler->get_options().get_options_datas() };
 		m_hovered_color.clear_vertices_and_lines();
 
 		const float titlebar_height{ ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f };
@@ -542,24 +542,24 @@ namespace PerlerMaker
 
 				switch( _direction )
 				{
-					case PerlerMaker::Direction::up:
+					case Pixeler::Direction::up:
 					{
 						point_B.x += m_zoom_level;
 						break;
 					}
-					case PerlerMaker::Direction::down:
+					case Pixeler::Direction::down:
 					{
 						point_A.y += m_zoom_level;
 						point_B.x += m_zoom_level;
 						point_B.y += m_zoom_level;
 						break;
 					}
-					case PerlerMaker::Direction::left:
+					case Pixeler::Direction::left:
 					{
 						point_B.y += m_zoom_level;
 						break;
 					}
-					case PerlerMaker::Direction::right:
+					case Pixeler::Direction::right:
 					{
 						point_A.x += m_zoom_level;
 						point_B.x += m_zoom_level;
@@ -636,7 +636,7 @@ namespace PerlerMaker
 
 	void CanvasManager::_display_canvas( const sf::Color& _bg_color )
 	{
-		auto& options_datas{ g_perler_maker->get_options().get_options_datas() };
+		auto& options_datas{ g_pixeler->get_options().get_options_datas() };
 		auto sprite_size{ m_canvas_size };
 
 		m_sprite.setTextureRect( { 0, 0, (int)m_canvas_size.x, (int)m_canvas_size.y } );
@@ -791,14 +791,14 @@ namespace PerlerMaker
 
 		if( ImGui::SmallButton( "Convert" ) )
 		{
-			g_perler_maker->get_palettes_manager().reset_color_counts();
+			g_pixeler->get_palettes_manager().reset_color_counts();
 			_convert_image_colors();
 		}
 
 		ImGui::SameLine();
 		ImGui::TextColored( ImGui_fzn::color::dark_gray, "|" );
 		ImGui::SameLine();
-		g_perler_maker->get_options().bottom_bar_options();
+		g_pixeler->get_options().bottom_bar_options();
 	}
 
-} // namespace PerlerMaker
+} // namespace Pixeler

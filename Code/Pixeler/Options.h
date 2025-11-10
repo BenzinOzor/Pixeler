@@ -5,7 +5,7 @@
 #include <FZN/Managers/InputManager.h>
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	class Options
 	{
@@ -59,4 +59,4 @@ namespace PerlerMaker
 		OptionsDatas m_temp_options_datas;
 		bool m_need_save{ false };
 	};
-} // namespace PerlerMaker
+} // namespace Pixeler

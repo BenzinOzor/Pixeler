@@ -4,16 +4,16 @@
 #include <FZN/Managers/DataManager.h>
 #include <FZN/UI/ImGui.h>
 
-#include "PerlerMaker/PerlerMaker.h"
+#include "Pixeler/Pixeler.h"
 
 
-PerlerMaker::CPerlerMaker* g_perler_maker = nullptr;
+Pixeler::CPixeler* g_pixeler = nullptr;
 
-namespace PerlerMaker
+namespace Pixeler
 {
-	CPerlerMaker::CPerlerMaker()
+	CPixeler::CPixeler()
 	{
-		g_pFZN_Core->AddCallback( this, &CPerlerMaker::display, fzn::DataCallbackType::Display );
+		g_pFZN_Core->AddCallback( this, &CPixeler::display, fzn::DataCallbackType::Display );
 
 		auto& oIO = ImGui::GetIO();
 
@@ -24,15 +24,15 @@ namespace PerlerMaker
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontRegular = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/Fonts/Rubik Light Regular.ttf" ), 16.f );
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/Fonts/Rubik Light Bold.ttf" ), 16.f );
 
-		g_perler_maker = this;
+		g_pixeler = this;
 	}
 
-	CPerlerMaker::~CPerlerMaker()
+	CPixeler::~CPixeler()
 	{
-		g_pFZN_Core->RemoveCallback( this, &CPerlerMaker::display, fzn::DataCallbackType::Display );
+		g_pFZN_Core->RemoveCallback( this, &CPixeler::display, fzn::DataCallbackType::Display );
 	}
 
-	void CPerlerMaker::display()
+	void CPixeler::display()
 	{
 		const auto window_size = g_pFZN_WindowMgr->GetWindowSize();
 
@@ -50,7 +50,7 @@ namespace PerlerMaker
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 		window_flags |= ImGuiWindowFlags_NoBackground;
 
-		ImGui::Begin( "Perler Maker", NULL, window_flags );
+		ImGui::Begin( "Pixeler", NULL, window_flags );
 		ImGui::PopStyleVar( 3 );
 
 		_display_menu_bar();
@@ -69,7 +69,7 @@ namespace PerlerMaker
 		ImGui::PopStyleColor( 2 );
 	}
 
-	void CPerlerMaker::_load_image()
+	void CPixeler::_load_image()
 	{
 		char file[ 100 ];
 		OPENFILENAME open_file_name;
@@ -88,7 +88,7 @@ namespace PerlerMaker
 			m_canvas_manager.load_texture( open_file_name.lpstrFile );
 	}
 
-	void CPerlerMaker::_display_menu_bar()
+	void CPixeler::_display_menu_bar()
 	{
 		if( ImGui::BeginMainMenuBar() )
 		{

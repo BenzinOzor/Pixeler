@@ -5,10 +5,10 @@
 
 #include "Utils.h"
 #include "Defines.h"
-#include "PerlerMaker.h"
+#include "Pixeler.h"
 
 
-namespace PerlerMaker::Utils
+namespace Pixeler::Utils
 {
 	sf::Color to_sf_color( const ImColor& _color )
 	{
@@ -29,8 +29,8 @@ namespace PerlerMaker::Utils
 
 		const ColorPalette* current_palette{ nullptr };
 
-		if( g_perler_maker != nullptr )
-			current_palette = g_perler_maker->get_palettes_manager().get_selected_palette();
+		if( g_pixeler != nullptr )
+			current_palette = g_pixeler->get_palettes_manager().get_selected_palette();
 
 		if( current_palette == nullptr )
 			return result;
@@ -167,5 +167,5 @@ namespace PerlerMaker::Utils
 			ImGui::EndTable();
 		}
 	}
-} // namespace PerlerMaker
+} // namespace Pixeler
 

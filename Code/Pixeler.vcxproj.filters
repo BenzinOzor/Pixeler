@@ -15,25 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PerlerMaker\main.cpp">
+    <ClCompile Include="Pixeler\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\PerlerMaker.cpp">
+    <ClCompile Include="Pixeler\Pixeler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\Options.cpp">
+    <ClCompile Include="Pixeler\Options.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\PalettesManager.cpp">
+    <ClCompile Include="Pixeler\PalettesManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\CanvasManager.cpp">
+    <ClCompile Include="Pixeler\CanvasManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\Utils.cpp">
+    <ClCompile Include="Pixeler\Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerlerMaker\PalettesManager_ui.cpp">
+    <ClCompile Include="Pixeler\PalettesManager_ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -49,28 +49,28 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PerlerMaker\PerlerMaker.h">
+    <ClInclude Include="Pixeler\Pixeler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\Options.h">
+    <ClInclude Include="Pixeler\Options.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\PalettesManager.h">
+    <ClInclude Include="Pixeler\PalettesManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\CanvasManager.h">
+    <ClInclude Include="Pixeler\CanvasManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\Defines.h">
+    <ClInclude Include="Pixeler\Defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\Utils.h">
+    <ClInclude Include="Pixeler\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\Event.h">
+    <ClInclude Include="Pixeler\Event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerlerMaker\ColorPalette.h">
+    <ClInclude Include="Pixeler\ColorPalette.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

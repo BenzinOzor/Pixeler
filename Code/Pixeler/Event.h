@@ -3,7 +3,7 @@
 #include <FZN/DataStructure/Variant.h>
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	class Event
 	{

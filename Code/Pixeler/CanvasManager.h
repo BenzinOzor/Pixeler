@@ -11,7 +11,7 @@
 class sf::Texture;
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	struct ColorInfos;
 
@@ -189,4 +189,4 @@ namespace PerlerMaker
 		sf::VertexArray					m_pixel_grid;
 		sf::Shader*						m_grid_shader{ nullptr };
 	};
-} // namespace PerlerMaker
+} // namespace Pixeler

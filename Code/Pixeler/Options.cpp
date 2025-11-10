@@ -8,11 +8,11 @@
 
 #include "Options.h"
 #include "Defines.h"
-#include "PerlerMaker.h"
+#include "Pixeler.h"
 #include "Utils.h"
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	Options::Options()
 	{
@@ -58,7 +58,7 @@ namespace PerlerMaker
 		ImGui::SetNextItemWidth( DefaultWidgetSize.x );
 		if( ImGui_fzn::small_slider_float( "Opacity", m_options_datas.m_original_opacity_pct, 0.f, 100.f, "%.0f%%", ImGuiSliderFlags_NoInput | ImGuiSliderFlags_AlwaysClamp ) )
 		{
-			g_perler_maker->get_canvas_manager().set_original_sprite_opacity( m_options_datas.m_original_opacity_pct );
+			g_pixeler->get_canvas_manager().set_original_sprite_opacity( m_options_datas.m_original_opacity_pct );
 		}
 		if( ImGui::IsItemHovered() && ImGui::IsItemActive() == false )
 			ImGui::SetTooltip( Tooltip_OriginalOpacity );
@@ -361,4 +361,4 @@ namespace PerlerMaker
 		check_action_and_set_option( Action_ShowSecondaryHighlight, m_options_datas.m_show_secondary_highlight );
 	}
 
-} // namespace PerlerMaker
+} // namespace Pixeler

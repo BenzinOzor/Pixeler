@@ -12,7 +12,7 @@
 #include "Utils.h"
 
 
-namespace PerlerMaker
+namespace Pixeler
 {
 	PalettesManager::PalettesManager():
 		m_fzn_palettes_path( g_pFZN_Core->GetDataPath( "XMLFiles/Palettes" ) ),
@@ -786,4 +786,4 @@ namespace PerlerMaker
 		// If no ID matched or the given color doesn't use it, we look for its name in the filter.
 		return fzn::Tools::match_filter( m_color_filter, _color.m_color_id.m_name );
 	}
-} // namespace PerlerMaker
+} // namespace Pixeler
