@@ -16,10 +16,10 @@ namespace Pixeler
 			ImVec4	m_grid_color{ ImGui_fzn::color::black };
 
 			ImVec4	m_area_highlight_color{ ImGui_fzn::color::bright_red };
-			float	m_area_highlight_thickness{ 1.f };
+			float	m_area_highlight_thickness{ 3.f };
 
 			ImVec4	m_area_secondary_highlight_color{ ImGui_fzn::color::dark_red };
-			float	m_area_secondary_highlight_thickness{ 1.f };
+			float	m_area_secondary_highlight_thickness{ 3.f };
 			bool	m_show_secondary_highlight{ true };
 
 			bool	m_grid_same_color_as_canvas{ true };

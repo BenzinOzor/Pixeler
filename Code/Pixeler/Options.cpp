@@ -1,4 +1,5 @@
 #include <fstream>
+#include <filesystem>
 
 #include <Externals/json/json.h>
 
@@ -264,10 +265,17 @@ namespace Pixeler
 
 	void Options::_load_options()
 	{
-		auto file = std::ifstream{ g_pFZN_Core->GetSaveFolderPath() + "/options.json" };
+		const std::string option_file_path{ g_pFZN_Core->GetSaveFolderPath() + "/options.json" };
+		auto file = std::ifstream{ option_file_path };
 
 		if( file.is_open() == false )
+		{
+			// If the reason we could not open the option file is that it doesn't exist, create it.
+			if( std::filesystem::exists( option_file_path ) == false )
+				_save_options();
+
 			return;
+		}
 
 		auto root = Json::Value{};
 
