@@ -28,6 +28,8 @@ namespace Pixeler
 			float	m_original_opacity_pct{ 100.f };
 			bool	m_show_original{ false };
 
+			sf::Vector2u m_window_size{ 1280, 720 };	// The size of the window when it's not in fullscreen.
+
 			std::vector< fzn::ActionKey > m_bindings;
 		};
 

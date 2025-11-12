@@ -177,6 +177,19 @@ namespace Pixeler
 	{
 		sf::Event sf_event = g_pFZN_WindowMgr->GetWindowEvent();
 
+		switch( sf_event.type )
+		{
+			case sf::Event::Closed:
+			{
+				_save_options();
+				return;
+			};
+			case sf::Event::Resized:
+			{
+				m_options_datas.m_window_size = g_pFZN_WindowMgr->GetWindowSize();
+			};
+		};
+
 		if( sf_event.type == sf::Event::Closed )
 		{
 			_save_options();
@@ -272,7 +285,10 @@ namespace Pixeler
 		{
 			// If the reason we could not open the option file is that it doesn't exist, create it.
 			if( std::filesystem::exists( option_file_path ) == false )
+			{
+				m_options_datas.m_window_size = g_pFZN_WindowMgr->GetWindowSize();
 				_save_options();
+			}
 
 			return;
 		}
@@ -299,6 +315,11 @@ namespace Pixeler
 		m_options_datas.m_show_grid = root[ "show_grid" ].asBool();
 		m_options_datas.m_show_secondary_highlight = root[ "show_secondary_highlight" ].asBool();
 		m_options_datas.m_area_secondary_highlight_thickness = root[ "area_secondary_highlight_thickness" ].asFloat();
+
+		m_options_datas.m_window_size.x = std::max( root[ "window_size" ][ 0 ].asUInt(), 800u );
+		m_options_datas.m_window_size.y = std::max( root[ "window_size" ][ 1 ].asUInt(), 600u );
+
+		g_pFZN_WindowMgr->SetWindowSize( m_options_datas.m_window_size );
 
 		m_options_datas.m_bindings = g_pFZN_InputMgr->GetActionKeys();
 	}
@@ -328,6 +349,9 @@ namespace Pixeler
 		root[ "show_grid" ] = m_options_datas.m_show_grid;
 		root[ "show_secondary_highlight" ] = m_options_datas.m_show_secondary_highlight;
 		root[ "area_secondary_highlight_thickness" ] = m_options_datas.m_area_secondary_highlight_thickness;
+
+		root[ "window_size" ][ 0 ] = m_options_datas.m_window_size.x;
+		root[ "window_size" ][ 1 ] = m_options_datas.m_window_size.y;
 
 		file << json_writer.write( root );
 

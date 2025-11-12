@@ -30,7 +30,7 @@ int main()
 	//Loading of the resources that don't belong in a resource group and filling of the map containing the paths to the resources)
 	g_pFZN_DataMgr->LoadResourceFile( DATAPATH( "XMLFiles/Resources" ) );
 
-	g_pFZN_WindowMgr->AddWindow( 1920, 1080, sf::Style::Close | sf::Style::Resize, g_pFZN_Core->GetProjectName().c_str() );
+	g_pFZN_WindowMgr->AddWindow( 1280, 720, sf::Style::Close | sf::Style::Resize, g_pFZN_Core->GetProjectName().c_str() );
 	g_pFZN_WindowMgr->SetWindowFramerate(60);
 	g_pFZN_WindowMgr->SetWindowClearColor( sf::Color::Black );
 	
