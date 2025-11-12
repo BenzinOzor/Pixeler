@@ -122,6 +122,11 @@ namespace Pixeler
 				ImGui::EndMenu();
 			}
 
+			sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
+			std::string version{ "Ver. 0.1.0.0" };
+			ImGui::SameLine( window_size.x - ImGui::CalcTextSize( version.c_str() ).x - 2.f * ImGui::GetStyle().ItemSpacing.x );
+			ImGui::TextColored( ImGui_fzn::color::light_gray, version.c_str() );
+
 			ImGui::EndMainMenuBar();
 		}
 	}
