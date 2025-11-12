@@ -780,7 +780,10 @@ namespace Pixeler
 
 		auto new_pixel_size{ m_zoom_level };
 		if( ImGui_fzn::small_slider_float( "Zoom Level", new_pixel_size, 1.f, 100.f, "x%.0f", ImGuiSliderFlags_NoInput | ImGuiSliderFlags_AlwaysClamp ) )
+		{
 			_update_zoom_level( new_pixel_size );
+			_set_vertex_array_pos( {} );
+		}
 
 		ImGui::SameLine();
 
@@ -791,7 +794,8 @@ namespace Pixeler
 
 		if( ImGui::SmallButton( "Convert" ) )
 		{
-			g_pixeler->get_palettes_manager().reset_color_counts();
+			// For now, resetting colors of all palettes. Later with a tab system, maybe only the selected one could be reset.
+			g_pixeler->get_palettes_manager().reset_color_counts( true );
 			_convert_image_colors();
 		}
 

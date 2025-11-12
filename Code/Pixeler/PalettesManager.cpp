@@ -131,9 +131,21 @@ namespace Pixeler
 
 	/**
 	* @brief Set all colors counts of the current palette to 0. Called when beginning a new image convertion.
+	* @param _all_palettes True if the color counts of all the palettes are reset. Juste the selected one otherwise.
 	**/
-	void PalettesManager::reset_color_counts()
+	void PalettesManager::reset_color_counts( bool _all_palettes )
 	{
+		if( _all_palettes )
+		{
+			for( ColorPalette& palette : m_palettes )
+			{
+				for( auto& color : palette.m_colors )
+					color.m_count = 0;
+			}
+
+			return;
+		}
+
 		if( m_selected_palette == nullptr )
 			return;
 
