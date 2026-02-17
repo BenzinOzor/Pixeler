@@ -165,7 +165,7 @@ namespace Pixeler
 				{
 					m_show_window = false;
 					m_options_datas = m_temp_options_datas;
-					g_pFZN_InputMgr->ResetActionKeys();
+					g_pFZN_InputMgr->RestoreBackupActionKeys();
 				}
 			});
 		}
